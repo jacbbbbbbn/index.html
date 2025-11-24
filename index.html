@@ -34,14 +34,14 @@
 <div class="container">
     <div class="main">
         <h1>皇室战争记牌器 2025 百度智能云版</h1>
-       
+      
         <div class="config">
             <div style="font-size:18px;margin-bottom:10px">百度语音识别配置</div>
             <input type="text" id="appid" placeholder="AppID">
             <input type="text" id="apiKey" placeholder="API Key">
             <input type="text" id="secretKey" placeholder="Secret Key">
             <div style="margin-top:15px">
-                <button id="getToken">保存配置</button>
+                <button id="getToken">保存配置并获取Token</button>
             </div>
             <div style="margin-top:10px;font-size:15px" id="tokenStatus">填写后点击保存</div>
         </div>
@@ -53,7 +53,7 @@
         </div>
         <div class="status" id="status">请先填写配置并保存</div>
         <div class="slots" id="slots"></div>
-       
+      
         <!-- 实时语音文字显示栏 -->
         <div class="speech-text" id="speechText">
             听到的内容会实时显示在这里...
@@ -73,7 +73,6 @@ const aliasMap = {"皮卡":"皮卡超人","逼卡":"皮卡超人","pika":"皮卡
 let slots = [], lastAddTime = 0;
 const toast = document.getElementById('toast');
 const speechText = document.getElementById('speechText');
-
 // 语音识别相关变量
 let ws = null;
 let audioContext = null;
@@ -85,52 +84,70 @@ const cuid = 'clash-royale-' + Math.random().toString(36).substr(2, 9);
 let sn = null;
 let reconnectAttempts = 0;
 const MAX_RECONNECTS = 2;
-let transcriptBuffer = ''; // 新增：文本缓冲区，用于积累实时文本并检索关键词
+let transcriptBuffer = ''; // 文本缓冲区，用于积累实时文本并检索关键词
 const MAX_BUFFER_LENGTH = 500; // 缓冲区上限，防止无限积累
-
 // UI函数
 function showToast(t){toast.textContent=t;toast.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>toast.classList.remove('show'),3000);}
 function updateSlots(){const s=document.getElementById('slots');s.innerHTML='';for(let i=0;i<8;i++){const d=document.createElement('div');d.className=`slot ${i<4?'used':'library'}`;d.textContent=slots[i]||(i<4?`已用 ${i+1}`:`卡组 ${i+5}`);s.appendChild(d);}document.getElementById('undoBtn').disabled=slots.length===0;}
 function addCard(n){const w=Date.now();if(w-lastAddTime<600)return;if(slots[0]===n)return;slots.unshift(n);if(slots.length>8)slots.pop();lastAddTime=w;showToast(`添加: ${n}`);updateSlots();}
 function renderAtlas(f=''){const l=document.getElementById('cardList');l.innerHTML='';allCards.filter(c=>c.includes(f)).forEach(c=>{const b=document.createElement('button');b.className='card-btn';b.textContent=c;b.onclick=()=>addCard(c);l.appendChild(b);});}
 document.getElementById('searchInput').addEventListener('input',e=>renderAtlas(e.target.value));
-
-// 配置保存
-document.getElementById('getToken').onclick = function() {
+// 配置保存与Token获取
+document.getElementById('getToken').onclick = async function() {
   const appid = document.getElementById('appid').value.trim();
   const apiKey = document.getElementById('apiKey').value.trim();
-  if (!appid || !apiKey) {
-    showToast('请填写 AppID 和 API Key');
+  const secretKey = document.getElementById('secretKey').value.trim();
+  if (!appid || !apiKey || !secretKey) {
+    showToast('请填写完整配置（AppID、API Key、Secret Key）');
     return;
   }
-  localStorage.setItem('baidu_appid', appid);
-  localStorage.setItem('baidu_appkey', apiKey);
-  document.getElementById('tokenStatus').textContent = '配置已保存';
-  showToast('配置保存成功');
-  document.getElementById('startBtn').disabled = false;
+  try {
+    const tokenUrl = `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${apiKey}&client_secret=${secretKey}`;
+    const response = await fetch(tokenUrl);
+    const data = await response.json();
+    if (data.access_token) {
+      localStorage.setItem('baidu_appid', appid);
+      localStorage.setItem('baidu_token', data.access_token);
+      localStorage.setItem('baidu_token_expires', Date.now() + data.expires_in * 1000);
+      document.getElementById('tokenStatus').textContent = `Token获取成功，有效期约30天（过期时间：${new Date(data.expires_in * 1000 + Date.now()).toLocaleString()}）`;
+      showToast('配置保存并获取Token成功');
+      document.getElementById('startBtn').disabled = false;
+    } else {
+      throw new Error(data.error || 'Token获取失败');
+    }
+  } catch (err) {
+    console.error('Token获取错误:', err);
+    showToast('Token获取错误: ' + err.message);
+    document.getElementById('tokenStatus').textContent = 'Token获取失败，请检查凭证';
+  }
 };
-
 // 初始化加载
 window.addEventListener('load', function() {
   const appid = localStorage.getItem('baidu_appid');
-  if (appid) {
+  const token = localStorage.getItem('baidu_token');
+  const expires = localStorage.getItem('baidu_token_expires');
+  if (appid && token && Date.now() < (expires || 0)) {
     document.getElementById('appid').value = appid;
-    document.getElementById('apiKey').value = localStorage.getItem('baidu_appkey') || '';
+    document.getElementById('apiKey').value = ''; // 安全起见，不回显Key
+    document.getElementById('secretKey').value = '';
+    document.getElementById('tokenStatus').textContent = `Token有效（过期时间：${new Date(parseInt(expires)).toLocaleString()}）`;
     document.getElementById('startBtn').disabled = false;
+  } else if (appid) {
+    document.getElementById('tokenStatus').textContent = 'Token已过期，请重新获取';
   }
   sn = 'sn-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
   renderAtlas();
   updateSlots();
 });
-
-// 处理识别结果（优化：对缓冲区实时检索）
+// 处理识别结果（优化：兼容数组/字符串，添加日志）
 function processResult(text) {
-  transcriptBuffer += text + ' '; // 追加到缓冲区
+  if (Array.isArray(text)) text = text[0] || ''; // 兼容数组格式
+  console.log('收到识别文本:', text); // 调试日志
+  transcriptBuffer += text + ' ';
   if (transcriptBuffer.length > MAX_BUFFER_LENGTH) {
-    transcriptBuffer = transcriptBuffer.slice(-MAX_BUFFER_LENGTH); // 截断旧文本
+    transcriptBuffer = transcriptBuffer.slice(-MAX_BUFFER_LENGTH);
   }
-  speechText.textContent = transcriptBuffer.trim(); // 更新显示区
-
+  speechText.textContent = transcriptBuffer.trim();
   const words = transcriptBuffer.replace(/[，。！？；：]/g, ' ').split(/\s+/).filter(w => w.trim());
   for (let word of words) {
     let card = word;
@@ -140,23 +157,23 @@ function processResult(text) {
     if (allCards.includes(card)) {
       addCard(card);
       showToast(`识别并添加: ${card}`);
-      transcriptBuffer = ''; // 清空缓冲区，聚焦新输入
+      transcriptBuffer = '';
       speechText.textContent = '';
       break;
     }
   }
 }
-
 // 开始监听
 document.getElementById('startBtn').onclick = async function() {
   const appid = localStorage.getItem('baidu_appid');
-  const appkey = localStorage.getItem('baidu_appkey');
-  if (!appid || !appkey) {
-    showToast('请先保存配置');
+  const token = localStorage.getItem('baidu_token');
+  const expires = localStorage.getItem('baidu_token_expires');
+  if (!appid || !token || Date.now() > (expires || 0)) {
+    showToast('Token无效或过期，请重新保存配置');
     return;
   }
   reconnectAttempts = 0;
-  transcriptBuffer = ''; // 重置缓冲区
+  transcriptBuffer = '';
   try {
     console.log('开始麦克风访问...');
     const stream = await navigator.mediaDevices.getUserMedia({ audio: { sampleRate: SAMPLE_RATE, channelCount: 1 } });
@@ -166,18 +183,17 @@ document.getElementById('startBtn').onclick = async function() {
     processor = audioContext.createScriptProcessor(4096, 1, 1);
     source.connect(processor);
     processor.connect(audioContext.destination);
-
-    ws = new WebSocket(`wss://vop.baidu.com/realtime_asr?sn=${sn}`);
+    const wsUrl = `wss://vop.baidu.com/realtime_asr?sn=${sn}&access_token=${token}`;
+    ws = new WebSocket(wsUrl);
     ws.binaryType = 'arraybuffer';
-    console.log('WebSocket连接建立中...');
-
+    console.log('WebSocket连接建立中...', wsUrl);
     ws.onopen = () => {
       console.log('WebSocket打开，发送START');
       const startMsg = {
         type: 'START',
         data: {
           appid: parseInt(appid),
-          appkey: appkey,
+          token: token,
           dev_pid: 15372, // 普通话带标点
           cuid: cuid,
           format: 'pcm',
@@ -185,7 +201,6 @@ document.getElementById('startBtn').onclick = async function() {
         }
       };
       ws.send(JSON.stringify(startMsg));
-
       processor.onaudioprocess = (e) => {
         if (!isRecording) return;
         const inputBuffer = e.inputBuffer.getChannelData(0);
@@ -197,9 +212,7 @@ document.getElementById('startBtn').onclick = async function() {
         if (ws.readyState === WebSocket.OPEN) {
           ws.send(pcmData.buffer); // 持续发送音频
         }
-        // 移除沉默检测，依赖服务器自动分句
       };
-
       isRecording = true;
       document.getElementById('status').textContent = '持续实时监听中...';
       document.getElementById('startBtn').disabled = true;
@@ -208,36 +221,48 @@ document.getElementById('startBtn').onclick = async function() {
       speechText.textContent = '';
       showToast('开始持续监听');
     };
-
     ws.onmessage = (event) => {
+      console.log('收到WebSocket消息:', event.data); // 调试日志
       if (typeof event.data === 'string') {
-        const msg = JSON.parse(event.data);
-        if (msg.type === 'MID_TEXT' || msg.type === 'FIN_TEXT') {
-          if (msg.err_no === 0) {
-            processResult(msg.result); // 实时追加并检索
-          } else {
-            console.error('识别错误:', msg.err_msg);
+        try {
+          const msg = JSON.parse(event.data);
+          console.log('解析消息:', msg); // 调试日志
+          if (msg.type === 'MID_TEXT' || msg.type === 'FIN_TEXT') {
+            if (msg.err_no === 0) {
+              processResult(msg.result);
+            } else {
+              console.error('识别错误:', msg.err_msg);
+              showToast('识别错误: ' + msg.err_msg);
+            }
           }
+        } catch (e) {
+          console.error('消息解析失败:', e, event.data);
         }
       }
     };
-
     ws.onclose = (event) => {
       console.log('WebSocket关闭:', event.code, event.reason);
       if (reconnectAttempts < MAX_RECONNECTS && isRecording) {
         reconnectAttempts++;
         console.log(`尝试重连... (${reconnectAttempts}/${MAX_RECONNECTS})`);
-        setTimeout(() => {
-          sn = 'sn-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9); // 新SN
-          ws = new WebSocket(`wss://vop.baidu.com/realtime_asr?sn=${sn}`);
+        setTimeout(async () => {
+          // 检查token过期，必要时刷新（简化：重新获取）
+          const newToken = localStorage.getItem('baidu_token'); // 假设未过期
+          if (!newToken) {
+            showToast('Token过期，重连失败，请重新配置');
+            return;
+          }
+          sn = 'sn-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+          const newWsUrl = `wss://vop.baidu.com/realtime_asr?sn=${sn}&access_token=${newToken}`;
+          ws = new WebSocket(newWsUrl);
           ws.binaryType = 'arraybuffer';
-          // 重新绑定事件（简化版，实际可提取函数）
           ws.onopen = () => {
-            const startMsg = { type: 'START', data: { appid: parseInt(appid), appkey: appkey, dev_pid: 15372, cuid: cuid, format: 'pcm', sample: SAMPLE_RATE } };
+            const startMsg = { type: 'START', data: { appid: parseInt(appid), token: newToken, dev_pid: 15372, cuid: cuid, format: 'pcm', sample: SAMPLE_RATE } };
             ws.send(JSON.stringify(startMsg));
             document.getElementById('status').textContent = `重连成功，继续监听...`;
           };
-          ws.onmessage = ws.onmessage; // 复用
+          // 复用其他事件处理器
+          ws.onmessage = ws.onmessage;
           ws.onclose = ws.onclose;
           ws.onerror = ws.onerror;
         }, 1000);
@@ -246,19 +271,16 @@ document.getElementById('startBtn').onclick = async function() {
         showToast('连接已关闭（重连失败）');
       }
     };
-
     ws.onerror = (err) => {
       console.error('WebSocket错误:', err);
       stopRecording();
-      showToast('连接发生错误');
+      showToast('连接发生错误，请检查网络或凭证');
     };
-
   } catch (err) {
     console.error('麦克风访问失败:', err);
     showToast('无法访问麦克风，请检查权限');
   }
 };
-
 // 停止录音
 function stopRecording() {
   isRecording = false;
@@ -273,10 +295,8 @@ function stopRecording() {
   document.getElementById('status').textContent = '已停止监听';
   speechText.textContent = '听到的内容会实时显示在这里...';
 }
-
 // 停止按钮
 document.getElementById('stopBtn').onclick = stopRecording;
-
 // 撤销
 document.getElementById('undoBtn').onclick = () => {
   if (slots.length > 0) {
@@ -285,7 +305,6 @@ document.getElementById('undoBtn').onclick = () => {
     showToast('已撤销上一张牌');
   }
 };
-
 // 清空
 document.getElementById('resetBtn').onclick = () => {
   slots = [];

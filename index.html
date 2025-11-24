@@ -70,13 +70,14 @@
 
 <div id="toast"></div>
 
-<!-- 使用 ES6 模块导入 Deepgram SDK -->
+<!-- ES6 模块导入 Deepgram SDK -->
 <script type="module">
-import { Deepgram } from 'https://cdn.jsdelivr.net/npm/@deepgram/sdk@3.2.0/+esm';
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@deepgram/sdk@3.2.0/+esm';
 
-window.Deepgram = Deepgram;  // 暴露到全局以兼容旧代码
+// 全局暴露 createClient 以兼容后续代码
+window.createDeepgramClient = createClient;
 
-// 卡牌库与别名表（保持不变）
+// 卡牌库与别名表
 const allCards = ["骑士","弓箭手","哥布林","炸弹兵","骷髅兵","野蛮人","亡灵","烈焰精灵","蝙蝠","迷你皮卡","哥布林团伙","野蛮人精锐","皇家卫队","重甲亡灵","皇家巨人","哥布林投矛手","骷髅飞龙","冰雪精灵","绿林团伙","烟花炮手","火枪手","瓦基丽武神","野猪骑士","三个火枪手","吹箭哥布林","治疗精灵","飞龙宝宝","骷髅军团","女巫","气球兵","黑暗王子","王子","哥布林巨人","猎人","雷电飞龙","骷髅守卫","巨石投手","飞斧屠夫","加农炮战车","掘地矿工","公主","超级骑士","寒冰法师","地狱飞龙","蛮羊骑士","熔岩猎犬","闪电法师","电磁炮","皇家幽灵","神箭游侠","幻影刺客","暗夜女巫","狂暴樵夫","女巫婆婆","渔夫","弓箭女皇","黄金圣骑","骷髅帝王","皇家塔公主","炮兵","飞刀女爵","皇家大厨","万箭齐发","电击法术","大雪球","皇家速递","火球","火箭","地震法术","野蛮人滚桶","哥布林飞桶","雷电法术","冰冻法术","伤害药水法术","镜像法术","狂暴法术","克隆法术","飓风法术","滚木","骷髅召唤","加农炮","迫击炮","特斯拉电磁塔","哥布林牢笼","骷髅墓碑","地狱之塔","哥布林小屋","烈焰熔炉","炸弹塔","圣水收集器","野蛮人小屋","十字连弩","哥布林钻机","法师","巨人","攻城炸弹人","皮卡超人","戈仑石人","战斗天使","皇家野猪","电击车小队","圣水戈仑","骷髅气球","骷髅巨人","飞行器"];
 
 const aliasMap = {"皮卡":"皮卡超人","逼卡":"皮卡超人","pika":"皮卡超人","皮卡丘":"皮卡超人","皮卡超":"皮卡超人","矿":"掘地矿工","矿工":"掘地矿工","老矿":"掘地矿工","墓园":"骷髅墓碑","墓地":"骷髅墓碑","坟":"骷髅墓碑","石头":"戈仑石人","戈仑":"戈仑石人","狗球":"戈仑石人","石":"戈仑石人","宝宝":"飞龙宝宝","小龙":"飞龙宝宝","飞龙":"飞龙宝宝","大电":"雷电法术","闪电":"雷电法术","电击":"雷电法术","箭雨":"万箭齐发","小箭雨":"万箭齐发","三枪":"三个火枪手","火枪":"三个火枪手","火枪手":"三个火枪手","超骑":"超级骑士","骑士超":"超级骑士","樵夫":"狂暴樵夫","狂暴樵夫":"狂暴樵夫","气球":"气球兵","球":"气球兵","冰法":"寒冰法师","火法":"闪电法师"};
@@ -115,15 +116,8 @@ document.getElementById('connectBtn').onclick = async () => {
     const statusEl = document.getElementById('apiStatus');
     statusEl.textContent = '正在验证密钥...';
 
-    if (typeof window.Deepgram !== 'function') {
-        statusEl.innerHTML = 'SDK 加载失败: window.Deepgram is not a constructor。请点击“重载 SDK”';
-        statusEl.style.color = '#ff6b6b';
-        btn.disabled = false; btn.textContent = '连接 Deepgram';
-        return;
-    }
-
     try {
-        deepgramClient = new window.Deepgram(key);
+        deepgramClient = createDeepgramClient(key);
         const response = await fetch('https://api.deepgram.com/v1/auth/token', {
             method: 'GET',
             headers: { 'Authorization': `Token ${key}` }

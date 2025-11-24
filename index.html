@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>皇室战争记牌器（2025优化版）</title>
+<style>
+    body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin: 0; padding: 20px; min-height: 100vh; color: #fff; }
+    h1 { text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+    .container { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 20px; padding: 20px; max-width: 900px; margin: 0 auto; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+    .controls button { padding: 12px 24px; margin: 8px; font-size: 16px; border: none; border-radius: 50px; cursor: pointer; transition: all 0.3s; }
+    #startBtn { background: #28a745; }
+    #stopBtn { background: #dc3545; }
+    #resetBtn { background: #ffc107; color: #212529; }
+    button:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .slots-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin: 30px 0; }
+    .slot { height: 110px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; text-align: center; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    .usage-slot { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    .library-slot { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+    .recognition-text { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 15px; height: 80px; overflow-y: auto; }
+    .tip { font-size: 14px; opacity: 0.9; margin-top: 20px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>皇室战争记牌器（2025终极优化版）</h1>
+    <div class="controls">
+        <button id="startBtn">开始录音</button>
+        <button id="stopBtn" disabled>停止录音</button>
+        <button id="resetBtn">清空槽位</button>
+    </div>
+    <div class="recognition-text" id="recognitionText">点击“开始录音”后，说出卡牌名称即可自动记录（如“火球”“皮卡超人”）</div>
+    <div class="slots-container" id="slotsContainer"></div>
+    <div class="tip">提示：说出完整卡牌名称效果最佳，已优化防误触，重复说同一张卡不会重复记录</div>
+</div>
+
+<script>
+// 完整卡牌库（2025年11月最新）
+const cards = ['亡灵','弓箭手','骑士','哥布林投矛手','哥布林','炸弹兵','骷髅兵','野蛮人','骷髅飞龙','烈焰精灵','蝙蝠','皇家卫队','皇家巨人','冰雪精灵','哥布林团伙','野蛮人精锐','亡灵大军','雷电精灵','骷髅气球','绿林团伙','烟花炮手','迷你皮卡','火枪手','巨人','瓦基丽武神','重甲亡灵','野蛮人攻城槌','法师','野猪骑士','飞行器','皇家野猪','三个火枪手','戈仑冰人','吹箭哥布林','电击车小队','治疗精灵','圣水戈仑','战斗天使','飞龙宝宝','骷髅军团','骷髅巨人','皮卡超人','攻城炸弹人','女巫','气球兵','黑暗王子','王子','哥布林巨人','猎人','戈仑石人','雷电飞龙','雷电巨人','骷髅守卫','巨石投手','飞斧屠夫','加农炮战车','掘地矿工','公主','超级骑士','寒冰法师','地狱飞龙','蛮羊骑士','熔岩猎犬','闪电法师','电磁炮','皇家幽灵','神箭游侠','幻影刺客','暗夜女巫','狂暴樵夫','女巫婆婆','渔夫','弓箭女皇','黄金圣骑','骷髅帝王','皇家塔公主','炮兵','飞刀女爵','皇家大厨',
+    '万箭齐发','电击法术','大雪球','皇家速递','火球','火箭','地震法术','野蛮人滚桶','哥布林飞桶','雷电法术','冰冻法术','伤害药水法术','镜像法术','狂暴法术','克隆法术','飓风法术','滚木','骷髅召唤',
+    '加农炮','迫击炮','特斯拉电磁塔','哥布林牢笼','骷髅墓碑','地狱之塔','哥布林小屋','烈焰熔炉','炸弹塔','圣水收集器','野蛮人小屋','十字连弩','哥布林钻机'];
+
+let slots = [];
+let recognition;
+let lastAddedCard = '';
+let isRecognizing = false;
+
+// 初始化8个槽位
+function initSlots() {
+    const container = document.getElementById('slotsContainer');
+    container.innerHTML = '';
+    for (let i = 1; i <= 8; i++) {
+        const slot = document.createElement('div');
+        slot.className = `slot ${i <= 4 ? 'usage-slot' : 'library-slot'}`;
+        slot.id = `slot-${i}`;
+        slot.textContent = i <= 4 ? `使用位 ${i}` : `卡组库 ${i}`;
+        container.appendChild(slot);
+    }
+}
+
+function updateSlots() {
+    for (let i = 0; i < 8; i++) {
+        const slot = document.getElementById(`slot-${i+1}`);
+        slot.textContent = slots[i] || (i < 4 ? `使用位 ${i+1}` : `卡组库 ${i+1}`);
+    }
+}
+
+function addCard(cardName) {
+    // 防止短时间内重复添加同一张卡
+    if (cardName === lastAddedCard) return;
+    
+    if (slots.length >= 8) {
+        slots.pop();
+    }
+    slots.unshift(cardName);
+    lastAddedCard = cardName;
+    updateSlots();
+    
+    // 3秒后允许重复添加（防止长按误触）
+    setTimeout(() => { if (lastAddedCard === cardName) lastAddedCard = ''; }, 3000);
+}
+
+// 优化的语音识别处理（模糊匹配 + 防止误触）
+function onResult(event) {
+    let finalTranscript = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+        }
+    }
+    if (!finalTranscript) return;
+
+    const text = finalTranscript.trim();
+    document.getElementById('recognitionText').textContent = `识别到：${text}`;
+
+    // 精确匹配优先，其次模糊匹配
+    let matched = cards.find(c => c === text) || 
+                  cards.find(c => c.includes(text)) || 
+                  cards.find(c => text.includes(c));
+
+    if (matched && !isRecognizing) {
+        isRecognizing = true;
+        addCard(matched);
+        setTimeout(() => isRecognizing = false, 800);
+    }
+}
+
+// 开始录音
+document.getElementById('startBtn').onclick = () => {
+    if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+        alert('您的浏览器不支持语音识别，推荐使用最新版 Chrome');
+        return;
+    }
+    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = 'zh-CN';
+    recognition.continuous = true;
+    recognition.interimResults = false;  // 改为只看最终结果，更稳定
+    recognition.onresult = onResult;
+    recognition.onerror = e => console.error('语音错误:', e.error);
+    recognition.onend = () => {
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('stopBtn').disabled = true;
+    };
+    recognition.start();
+    document.getElementById('startBtn').disabled = true;
+    document.getElementById('stopBtn').disabled = false;
+};
+
+// 停止录音
+document.getElementById('stopBtn').onclick = () => {
+    if (recognition) recognition.stop();
+};
+
+// 清空
+document.getElementById('resetBtn').onclick = () => {
+    slots = [];
+    lastAddedCard = '';
+    updateSlots();
+};
+
+initSlots();
+updateSlots();
+</script>
+</body>
+</html>

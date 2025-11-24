@@ -80,12 +80,13 @@ let audioContext = null;
 let source = null;
 let processor = null;
 let isRecording = false;
-let silenceStart = null;
-const SILENCE_THRESHOLD = 0.01; // 音量阈值
 const SAMPLE_RATE = 16000;
 const cuid = 'clash-royale-' + Math.random().toString(36).substr(2, 9);
 let sn = null;
-let sessionCount = 0;
+let reconnectAttempts = 0;
+const MAX_RECONNECTS = 2;
+let transcriptBuffer = ''; // 新增：文本缓冲区，用于积累实时文本并检索关键词
+const MAX_BUFFER_LENGTH = 500; // 缓冲区上限，防止无限积累
 
 // UI函数
 function showToast(t){toast.textContent=t;toast.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>toast.classList.remove('show'),3000);}
@@ -122,28 +123,28 @@ window.addEventListener('load', function() {
   updateSlots();
 });
 
-// 重启会话函数（实现无停顿循环）
-function restartSession() {
-  sessionCount++;
-  sn = 'sn-' + Date.now() + '-' + sessionCount;  // 新序列号
-  silenceStart = null;  // 重置沉默检测
-  const appid = parseInt(localStorage.getItem('baidu_appid'));
-  const appkey = localStorage.getItem('baidu_appkey');
-  const startMsg = {
-    type: 'START',
-    data: {
-      appid: appid,
-      appkey: appkey,
-      dev_pid: 15372, // 普通话带标点
-      cuid: cuid,
-      format: 'pcm',
-      sample: SAMPLE_RATE
-    }
-  };
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify(startMsg));
+// 处理识别结果（优化：对缓冲区实时检索）
+function processResult(text) {
+  transcriptBuffer += text + ' '; // 追加到缓冲区
+  if (transcriptBuffer.length > MAX_BUFFER_LENGTH) {
+    transcriptBuffer = transcriptBuffer.slice(-MAX_BUFFER_LENGTH); // 截断旧文本
   }
-  document.getElementById('status').textContent = `会话 ${sessionCount} 启动，继续监听...`;
+  speechText.textContent = transcriptBuffer.trim(); // 更新显示区
+
+  const words = transcriptBuffer.replace(/[，。！？；：]/g, ' ').split(/\s+/).filter(w => w.trim());
+  for (let word of words) {
+    let card = word;
+    if (aliasMap[word]) {
+      card = aliasMap[word];
+    }
+    if (allCards.includes(card)) {
+      addCard(card);
+      showToast(`识别并添加: ${card}`);
+      transcriptBuffer = ''; // 清空缓冲区，聚焦新输入
+      speechText.textContent = '';
+      break;
+    }
+  }
 }
 
 // 开始监听
@@ -154,24 +155,30 @@ document.getElementById('startBtn').onclick = async function() {
     showToast('请先保存配置');
     return;
   }
+  reconnectAttempts = 0;
+  transcriptBuffer = ''; // 重置缓冲区
   try {
+    console.log('开始麦克风访问...');
     const stream = await navigator.mediaDevices.getUserMedia({ audio: { sampleRate: SAMPLE_RATE, channelCount: 1 } });
+    console.log('麦克风访问成功');
     audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: SAMPLE_RATE });
     source = audioContext.createMediaStreamSource(stream);
     processor = audioContext.createScriptProcessor(4096, 1, 1);
     source.connect(processor);
-    processor.connect(audioContext.destination); // 可选：本地回放
+    processor.connect(audioContext.destination);
 
     ws = new WebSocket(`wss://vop.baidu.com/realtime_asr?sn=${sn}`);
     ws.binaryType = 'arraybuffer';
+    console.log('WebSocket连接建立中...');
 
     ws.onopen = () => {
+      console.log('WebSocket打开，发送START');
       const startMsg = {
         type: 'START',
         data: {
           appid: parseInt(appid),
           appkey: appkey,
-          dev_pid: 15372,
+          dev_pid: 15372, // 普通话带标点
           cuid: cuid,
           format: 'pcm',
           sample: SAMPLE_RATE
@@ -179,7 +186,6 @@ document.getElementById('startBtn').onclick = async function() {
       };
       ws.send(JSON.stringify(startMsg));
 
-      // 设置音频处理
       processor.onaudioprocess = (e) => {
         if (!isRecording) return;
         const inputBuffer = e.inputBuffer.getChannelData(0);
@@ -189,50 +195,56 @@ document.getElementById('startBtn').onclick = async function() {
           pcmData[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
         }
         if (ws.readyState === WebSocket.OPEN) {
-          ws.send(pcmData.buffer);
+          ws.send(pcmData.buffer); // 持续发送音频
         }
-        // 简单沉默检测
-        const volume = Math.max(...Array.from(inputBuffer).map(Math.abs));
-        if (volume < SILENCE_THRESHOLD) {
-          if (!silenceStart) silenceStart = Date.now();
-          if (Date.now() - silenceStart > 2000) {
-            sendFinish();
-          }
-        } else {
-          silenceStart = null;
-        }
+        // 移除沉默检测，依赖服务器自动分句
       };
 
       isRecording = true;
-      document.getElementById('status').textContent = '正在实时监听...';
+      document.getElementById('status').textContent = '持续实时监听中...';
       document.getElementById('startBtn').disabled = true;
       document.getElementById('stopBtn').disabled = false;
       document.getElementById('undoBtn').disabled = false;
       speechText.textContent = '';
-      showToast('开始监听');
+      showToast('开始持续监听');
     };
 
     ws.onmessage = (event) => {
       if (typeof event.data === 'string') {
         const msg = JSON.parse(event.data);
-        if (msg.type === 'MID_TEXT') {
-          speechText.textContent = msg.result;
-        } else if (msg.type === 'FIN_TEXT') {
+        if (msg.type === 'MID_TEXT' || msg.type === 'FIN_TEXT') {
           if (msg.err_no === 0) {
-            speechText.textContent = msg.result;
-            processResult(msg.result);
-            restartSession();  // 自动重启新会话，实现无停顿循环
+            processResult(msg.result); // 实时追加并检索
           } else {
             console.error('识别错误:', msg.err_msg);
-            restartSession();  // 错误时也重启
           }
         }
       }
     };
 
-    ws.onclose = () => {
-      stopRecording();
-      showToast('连接已关闭');
+    ws.onclose = (event) => {
+      console.log('WebSocket关闭:', event.code, event.reason);
+      if (reconnectAttempts < MAX_RECONNECTS && isRecording) {
+        reconnectAttempts++;
+        console.log(`尝试重连... (${reconnectAttempts}/${MAX_RECONNECTS})`);
+        setTimeout(() => {
+          sn = 'sn-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9); // 新SN
+          ws = new WebSocket(`wss://vop.baidu.com/realtime_asr?sn=${sn}`);
+          ws.binaryType = 'arraybuffer';
+          // 重新绑定事件（简化版，实际可提取函数）
+          ws.onopen = () => {
+            const startMsg = { type: 'START', data: { appid: parseInt(appid), appkey: appkey, dev_pid: 15372, cuid: cuid, format: 'pcm', sample: SAMPLE_RATE } };
+            ws.send(JSON.stringify(startMsg));
+            document.getElementById('status').textContent = `重连成功，继续监听...`;
+          };
+          ws.onmessage = ws.onmessage; // 复用
+          ws.onclose = ws.onclose;
+          ws.onerror = ws.onerror;
+        }, 1000);
+      } else {
+        stopRecording();
+        showToast('连接已关闭（重连失败）');
+      }
     };
 
     ws.onerror = (err) => {
@@ -240,50 +252,29 @@ document.getElementById('startBtn').onclick = async function() {
       stopRecording();
       showToast('连接发生错误');
     };
+
   } catch (err) {
     console.error('麦克风访问失败:', err);
     showToast('无法访问麦克风，请检查权限');
   }
 };
 
-// 处理识别结果
-function processResult(text) {
-  const words = text.replace(/[，。！？；：]/g, ' ').split(/\s+/).filter(w => w.trim());
-  for (let word of words) {
-    let card = word;
-    if (aliasMap[word]) {
-      card = aliasMap[word];
-    }
-    if (allCards.includes(card)) {
-      addCard(card);
-      showToast(`识别并添加: ${text}`);
-      break;
-    }
-  }
-}
-
-// 发送结束（仅结束当前句子，不关闭连接）
-function sendFinish() {
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({type: 'FINISH'}));
-  }
-  // 移除stopRecording()调用，实现循环
-}
-
-// 停止录音（仅用于手动全局停止）
+// 停止录音
 function stopRecording() {
   isRecording = false;
+  transcriptBuffer = '';
   if (processor) processor.disconnect();
   if (source) source.disconnect();
   if (audioContext) audioContext.close();
   if (ws) ws.close();
-  sessionCount = 0;
+  reconnectAttempts = 0;
   document.getElementById('startBtn').disabled = false;
   document.getElementById('stopBtn').disabled = true;
   document.getElementById('status').textContent = '已停止监听';
+  speechText.textContent = '听到的内容会实时显示在这里...';
 }
 
-// 停止按钮（全局停止）
+// 停止按钮
 document.getElementById('stopBtn').onclick = stopRecording;
 
 // 撤销

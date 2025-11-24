@@ -1,101 +1,5 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>皇室战争记牌器 · 2025 本地语音实时版</title>
-<style>
-    body {font-family:"Microsoft YaHei",Arial,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);margin:0;padding:20px;color:#fff;min-height:100vh;position:relative}
-    .container {max-width:1200px;margin:auto;display:grid;grid-template-columns:1fr 400px;gap:25px}
-    .main {background:rgba(255,255,255,0.15);backdrop-filter:blur(15px);border-radius:25px;padding:30px;box-shadow:0 10px 40px rgba(0,0,0,0.4)}
-    h1 {text-align:center;margin:0 0 20px}
-    input {width:90%;padding:14px;border-radius:12px;border:none;font-size:16px;margin:8px 0}
-    button {padding:14px 30px;margin:8px;font-size:17px;border:none;border-radius:50px;cursor:pointer;font-weight:bold;transition:all .3s}
-    #startBtn {background:#28a745}#stopBtn {background:#dc3545}#undoBtn {background:#6c757d}#resetBtn {background:#ffc107;color:#000}#clearHistoryBtn {background:#17a2b8}
-    button:hover {transform:translateY(-5px);box-shadow:0 10px 25px rgba(0,0,0,0.5)}
-    button:disabled {opacity:0.5;cursor:not-allowed}
-    .status {text-align:center;padding:20px;background:rgba(0,0,0,0.4);border-radius:18px;font-size:19px;margin:20px 0}
-    .slots {display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
-    .slot {height:140px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:bold;box-shadow:0 8px 30px rgba(0,0,0,0.5)}
-    .used {background:linear-gradient(135deg,#ff5e5e,#ff304f)}
-    .library {background:linear-gradient(135deg,#00d2ff,#0099ff)}
-    .speech-text {background:rgba(0,0,0,0.6);border-radius:20px;padding:20px;margin-top:20px;text-align:center;font-size:24px;font-weight:bold;min-height:80px;border:2px solid rgba(255,255,255,0.3);backdrop-filter:blur(10px)}
-    .manual-input {background:rgba(0,0,0,0.6);border-radius:20px;padding:20px;margin-top:10px;text-align:center;font-size:24px;font-weight:bold;min-height:80px;border:2px solid rgba(255,255,255,0.3);backdrop-filter:blur(10px)}
-    .history {background:rgba(0,0,0,0.6);border-radius:20px;padding:20px;margin-top:20px;max-height:200px;overflow-y:auto;border:2px solid rgba(255,255,255,0.3);backdrop-filter:blur(10px)}
-    .history-item {padding:5px 0;font-size:14px;border-bottom:1px solid rgba(255,255,255,0.2);display:flex;justify-content:space-between}
-    .history-time {font-size:12px;color:#ccc}
-    .atlas {background:rgba(255,255,255,0.15);backdrop-filter:blur(15px);border-radius:25px;padding:25px;max-height:90vh;overflow-y:auto}
-    .search {width:100%;padding:14px;margin-bottom:20px;border-radius:15px;border:none;font-size:16px}
-    .card-list {display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-    .card-btn {background:rgba(255,255,255,0.25);border:none;border-radius:12px;padding:12px 8px;font-size:14px;cursor:pointer;transition:all .2s}
-    .card-btn:hover {background:rgba(255,255,255,0.45);transform:scale(1.08)}
-    #toast {position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.92);color:#fff;padding:18px 40px;border-radius:50px;font-size:24px;font-weight:bold;box-shadow:0 15px 40px rgba(0,0,0,0.6);backdrop-filter:blur(12px);z-index:9999;opacity:0;transition:all .4s;pointer-events:none;border:2px solid rgba(255,255,255,0.3)}
-    #toast.show {opacity:1;transform:translateX(-50%) translateY(-15px)}
-</style>
-</head>
-<body>
-<div class="container">
-    <div class="main">
-        <h1>皇室战争记牌器 2025 本地语音实时版</h1>
-    
-        <div style="text-align:center">
-            <button id="startBtn">开始实时监听</button>
-            <button id="stopBtn" disabled>停止监听</button>
-            <button id="undoBtn" disabled>撤销上一张</button>
-            <button id="resetBtn">清空卡槽</button>
-            <button id="clearHistoryBtn">清空历史</button>
-        </div>
-        <div class="status" id="status">点击开始监听（需授权麦克风）</div>
-        <div class="slots" id="slots"></div>
-    
-        <!-- 实时语音文字显示栏 -->
-        <div class="speech-text" id="speechText">
-            听到的内容会实时显示在这里...
-        </div>
-        <!-- 手动输入备用栏 -->
-        <div class="manual-input">
-            <input type="text" id="manualInput" placeholder="手动输入卡牌名称，按回车添加（支持别名）..." style="width:100%;padding:14px;border-radius:12px;border:none;font-size:18px;text-align:center;">
-        </div>
-        <!-- 识别历史日志 -->
-        <div class="history" id="history">
-            <h3 style="margin:0 0 10px;text-align:center">识别历史</h3>
-            <div id="historyList">暂无记录...</div>
-        </div>
-    </div>
-    <div class="atlas">
-        <h2 style="text-align:center">卡牌图鉴（点我补录）</h2>
-        <input type="text" class="search" placeholder="搜索卡牌…" id="searchInput">
-        <div class="card-list" id="cardList"></div>
-    </div>
-</div>
-<div id="toast">识别成功</div>
-<script>
-// 完整卡牌库与别名
-const allCards = ["骑士","弓箭手","哥布林","炸弹兵","骷髅兵","野蛮人","亡灵","烈焰精灵","蝙蝠","迷你皮卡","哥布林团伙","野蛮人精锐","皇家卫队","重甲亡灵","皇家巨人","哥布林投矛手","骷髅飞龙","冰雪精灵","绿林团伙","烟花炮手","火枪手","瓦基丽武神","野猪骑士","三个火枪手","吹箭哥布林","治疗精灵","飞龙宝宝","骷髅军团","女巫","气球兵","黑暗王子","王子","哥布林巨人","猎人","雷电飞龙","骷髅守卫","巨石投手","飞斧屠夫","加农炮战车","掘地矿工","公主","超级骑士","寒冰法师","地狱飞龙","蛮羊骑士","熔岩猎犬","闪电法师","电磁炮","皇家幽灵","神箭游侠","幻影刺客","暗夜女巫","狂暴樵夫","女巫婆婆","渔夫","弓箭女皇","黄金圣骑","骷髅帝王","皇家塔公主","炮兵","飞刀女爵","皇家大厨","万箭齐发","电击法术","大雪球","皇家速递","火球","火箭","地震法术","野蛮人滚桶","哥布林飞桶","雷电法术","冰冻法术","伤害药水法术","镜像法术","狂暴法术","克隆法术","飓风法术","滚木","骷髅召唤","加农炮","迫击炮","特斯拉电磁塔","哥布林牢笼","骷髅墓碑","地狱之塔","哥布林小屋","烈焰熔炉","炸弹塔","圣水收集器","野蛮人小屋","十字连弩","哥布林钻机","法师","巨人","攻城炸弹人","皮卡超人","戈仑石人","战斗天使","皇家野猪","电击车小队","圣水戈仑","骷髅气球","骷髅巨人","飞行器"];
-const aliasMap = {"皮卡":"皮卡超人","逼卡":"皮卡超人","pika":"皮卡超人","皮卡丘":"皮卡超人","矿":"掘地矿工","矿工":"掘地矿工","墓园":"骷髅墓碑","墓地":"骷髅墓碑","坟":"骷髅墓碑","石头":"戈仑石人","戈仑":"戈仑石人","狗球":"戈仑石人","石":"戈仑石人","宝宝":"飞龙宝宝","小龙":"飞龙宝宝","飞龙":"飞龙宝宝","大电":"雷电法术","闪电":"雷电法术","电击":"雷电法术","箭雨":"万箭齐发","小箭雨":"万箭齐发","三枪":"三个火枪手","火枪":"三个火枪手","火枪手":"三个火枪手","超骑":"超级骑士","骑士超":"超级骑士","樵夫":"狂暴樵夫","狂暴樵夫":"狂暴樵夫","气球":"气球兵","球":"气球兵","冰法":"寒冰法师","火法":"闪电法师"};
-let slots = [], lastAddTime = 0, historyLog = [];
-const toast = document.getElementById('toast');
-const speechText = document.getElementById('speechText');
-const historyList = document.getElementById('historyList');
-// 语音识别相关变量（Web Speech API）
-let recognition = null;
-let isRecording = false;
-let reconnectAttempts = 0;
-let transcriptBuffer = '';
-const MAX_BUFFER_LENGTH = 200;
-// UI函数
-function showToast(t){toast.textContent=t;toast.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>toast.classList.remove('show'),2000);}
-function updateSlots(){const s=document.getElementById('slots');s.innerHTML='';for(let i=0;i<8;i++){const d=document.createElement('div');d.className=`slot ${i<4?'used':'library'}`;d.textContent=slots[i]||(i<4?`已用 ${i+1}`:`卡组 ${i+5}`);s.appendChild(d);}document.getElementById('undoBtn').disabled=slots.length===0;}
-function addCard(n, source = '未知'){const w=Date.now();if(w-lastAddTime<300)return;if(slots[0]===n)return;const index=slots.indexOf(n);if(index!==-1){slots.splice(index,1);}slots.unshift(n);if(slots.length>8)slots.pop();lastAddTime=w;const timeStamp = new Date().toLocaleTimeString();historyLog.unshift({card: n, time: timeStamp, source: source});updateHistory();showToast(`${source}添加: ${n}`);}
-function updateHistory(){const list = historyLog.slice(0, 10); // 限制显示最近10条
-  if (list.length === 0) {
-    historyList.innerHTML = '暂无记录...';
-    return;
-  }
-  historyList.innerHTML = list.map(item => `<div class="history-item"><span>${item.card} [${item.source}]</span><span class="history-time">${item.time}</span></div>`).join('');
-}
-function renderAtlas(f=''){const l=document.getElementById('cardList');l.innerHTML='';allCards.filter(c=>c.includes(f)).forEach(c=>{const b=document.createElement('button');b.className='card-btn';b.textContent=c;b.onclick=()=>addCard(c, '图鉴');l.appendChild(b);});}
-document.getElementById('searchInput').addEventListener('input',e=>renderAtlas(e.target.value));
+// ...（前文不变，直至processResult函数）
+
 // 改进的识别结果处理：支持中文断句检测与匹配
 function processResult(text) {
   transcriptBuffer += text + ' ';
@@ -105,147 +9,30 @@ function processResult(text) {
   speechText.textContent = transcriptBuffer.trim();
   // 清理标点并转换为小写以便匹配（针对别名）
   const cleanText = transcriptBuffer.replace(/[，。！？；：、（）()""''，]/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+  console.log('识别文本（清理后）:', cleanText); // 调试日志
+  
   // 扩展所有可能匹配项（卡牌 + 别名）
-  const allMatches = [...new Set([...allCards, ...Object.values(aliasMap)])];
-  // 贪婪匹配：从cleanText中查找连续子串匹配
-  for (let match of allMatches) {
-    const lowerMatch = match.toLowerCase();
-    const regex = new RegExp(`\\b${lowerMatch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
-    const found = cleanText.match(regex);
-    if (found) {
-      const detectedCard = allCards.includes(match) ? match : aliasMap[Object.keys(aliasMap).find(key => aliasMap[key] === match)] || match;
-      // 检查是否为有效卡牌
-      const validCards = slots.length >= 8 ? slots : allCards;
-      if (validCards.includes(detectedCard)) {
-        addCard(detectedCard, '语音');
-        transcriptBuffer = ''; // 清空缓冲，避免重复
-        speechText.textContent = '';
-        return; // 只添加一张，避免多重匹配
+  const allMatches = [...new Set([...allCards.map(c => c.toLowerCase()), ...Object.keys(aliasMap).map(k => k.toLowerCase()), ...Object.values(aliasMap).map(v => v.toLowerCase())])];
+  
+  // 子串匹配：遍历cleanText，查找连续匹配
+  for (let i = 0; i < cleanText.length; i++) {
+    for (let match of allMatches) {
+      if (cleanText.indexOf(match) !== -1) { // 简单包含匹配，避免词边界问题
+        const detectedCard = allCards.find(c => c.toLowerCase() === match) || 
+                             Object.values(aliasMap).find(v => v.toLowerCase() === match) || 
+                             aliasMap[Object.keys(aliasMap).find(k => k.toLowerCase() === match)] || match;
+        // 检查是否为有效卡牌
+        const validCards = slots.length >= 8 ? slots : allCards;
+        if (validCards.some(c => c.toLowerCase() === detectedCard.toLowerCase())) {
+          console.log('匹配成功:', detectedCard); // 调试日志
+          addCard(detectedCard, '语音');
+          transcriptBuffer = ''; // 清空缓冲，避免重复
+          speechText.textContent = '';
+          return; // 只添加一张
+        }
       }
     }
   }
 }
-// Web Speech API初始化与重连
-function startRecognition() {
-  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-    showToast('浏览器不支持语音识别，请使用Chrome');
-    return;
-  }
-  recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-  recognition.continuous = true;
-  recognition.interimResults = true;
-  recognition.lang = 'zh-CN'; // 中文识别
-  recognition.onstart = () => {
-    console.log('语音识别启动');
-    reconnectAttempts = 0;
-    isRecording = true;
-    document.getElementById('status').textContent = '持续实时监听中...';
-    document.getElementById('startBtn').disabled = true;
-    document.getElementById('stopBtn').disabled = false;
-    document.getElementById('undoBtn').disabled = false;
-    speechText.textContent = '';
-    showToast('开始持续监听');
-  };
-  recognition.onresult = (event) => {
-    let interimTranscript = '';
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-      if (event.results[i].isFinal) {
-        processResult(event.results[i][0].transcript);
-      } else {
-        interimTranscript += event.results[i][0].transcript;
-      }
-    }
-    if (interimTranscript) {
-      speechText.textContent = interimTranscript.trim(); // 临时显示
-    }
-  };
-  recognition.onerror = (event) => {
-    console.error('语音识别错误:', event.error);
-    if (isRecording) {
-      reconnectAttempts++;
-      const reconnectDelay = Math.min(1000 * Math.pow(1.5, reconnectAttempts - 1), 10000);
-      console.log(`自动重连中... (尝试 ${reconnectAttempts}，延迟 ${reconnectDelay}ms)`);
-      setTimeout(() => {
-        document.getElementById('status').textContent = `自动重连中... (第${reconnectAttempts}次)`;
-        startRecognition(); // 递归重启
-      }, reconnectDelay);
-    } else {
-      stopRecognition();
-      showToast('识别错误: ' + event.error);
-    }
-  };
-  recognition.onend = () => {
-    console.log('语音识别结束');
-    if (isRecording) {
-      // 非手动结束，自动重启
-      setTimeout(() => startRecognition(), 100);
-    }
-  };
-  recognition.start();
-}
-// 开始监听
-document.getElementById('startBtn').onclick = () => {
-  transcriptBuffer = '';
-  startRecognition();
-};
-// 停止录音
-function stopRecognition() {
-  isRecording = false;
-  if (recognition) {
-    recognition.stop();
-    recognition = null;
-  }
-  reconnectAttempts = 0;
-  document.getElementById('startBtn').disabled = false;
-  document.getElementById('stopBtn').disabled = true;
-  document.getElementById('status').textContent = '已停止监听';
-  speechText.textContent = '听到的内容会实时显示在这里...';
-}
-document.getElementById('stopBtn').onclick = stopRecognition;
-// 手动输入处理
-document.getElementById('manualInput').addEventListener('keypress', function(e) {
-  if (e.key === 'Enter') {
-    const word = e.target.value.trim();
-    if (!word) return;
-    let card = word;
-    if (aliasMap[word]) {
-      card = aliasMap[word];
-    }
-    const validCards = slots.length >= 8 ? slots : allCards;
-    if (validCards.includes(card)) {
-      addCard(card, '手动');
-      e.target.value = '';
-    } else {
-      showToast(`未找到卡牌: ${word}（满8张仅限现有卡组）`);
-    }
-  }
-});
-// 初始化加载
-window.addEventListener('load', function() {
-  renderAtlas();
-  updateSlots();
-  updateHistory();
-});
-// 撤销
-document.getElementById('undoBtn').onclick = () => {
-  if (slots.length > 0) {
-    slots.shift();
-    updateSlots();
-    showToast('已撤销上一张牌');
-  }
-};
-// 清空卡槽
-document.getElementById('resetBtn').onclick = () => {
-  slots = [];
-  updateSlots();
-  showToast('卡槽已清空');
-};
-// 清空历史
-document.getElementById('clearHistoryBtn').onclick = () => {
-  historyLog = [];
-  updateHistory();
-  showToast('历史已清空');
-};
-</script>
-</body>
-</html>
+
+// ...（后文不变）

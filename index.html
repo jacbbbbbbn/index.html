@@ -3,16 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>皇室战争记牌器 · 2025 百度语音识别手动输入版</title>
+<title>皇室战争记牌器 · 2025 语音识别响应优化版</title>
 <style>
     body {font-family:"Microsoft YaHei",Arial,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);margin:0;padding:20px;color:#fff;min-height:100vh;position:relative}
     .container {max-width:1200px;margin:auto;display:grid;grid-template-columns:1fr 400px;gap:25px}
     .main {background:rgba(255,255,255,0.15);backdrop-filter:blur(15px);border-radius:25px;padding:30px;box-shadow:0 10px 40px rgba(0,0,0,0.4)}
     h1 {text-align:center;margin:0 0 20px}
-    .config {background:rgba(255,255,255,0.15);border-radius:18px;padding:20px;margin-bottom:25px;text-align:center}
-    input {width:90%;padding:14px;border-radius:12px;border:none;font-size:16px;margin:8px 0}
     button {padding:14px 30px;margin:8px;font-size:17px;border:none;border-radius:50px;cursor:pointer;font-weight:bold;transition:all .3s}
-    #getToken {background:#007bff}#startBtn {background:#28a745}#stopBtn {background:#dc3545}#undoBtn {background:#6c757d}#resetBtn {background:#ffc107;color:#000}
+    #startBtn {background:#28a745}#stopBtn {background:#dc3545}#undoBtn {background:#6c757d}#resetBtn {background:#ffc107;color:#000}
     button:hover {transform:translateY(-5px);box-shadow:0 10px 25px rgba(0,0,0,0.5)}
     button:disabled {opacity:0.5;cursor:not-allowed}
     .status {text-align:center;padding:20px;background:rgba(0,0,0,0.4);border-radius:18px;font-size:19px;margin:20px 0}
@@ -33,27 +31,16 @@
 <body>
 <div class="container">
     <div class="main">
-        <h1>皇室战争记牌器 2025 百度智能云版</h1>
+        <h1>皇室战争记牌器 2025 语音识别持续检测版</h1>
         
-        <div class="config">
-            <div style="font-size:18px;margin-bottom:10px">百度语音识别配置</div>
-            <input type="text" id="appid" placeholder="AppID">
-            <input type="text" id="apiKey" placeholder="API Key">
-            <input type="text" id="secretKey" placeholder="Secret Key">
-            <div style="margin-top:15px">
-                <button id="getToken">获取并保存 Token</button>
-            </div>
-            <div style="margin-top:10px;font-size:15px" id="tokenStatus">填写后点击获取，永久保存</div>
-        </div>
-
         <div style="text-align:center">
-            <button id="startBtn" disabled>开始实时监听</button>
+            <button id="startBtn">开始实时监听</button>
             <button id="stopBtn" disabled>停止监听</button>
             <button id="undoBtn" disabled>撤销上一张</button>
             <button id="resetBtn">清空卡槽</button>
         </div>
 
-        <div class="status" id="status">请先填写配置并获取 Token</div>
+        <div class="status" id="status">点击开始后持续监听，说出卡牌名称，文字实时显示下方</div>
         <div class="slots" id="slots"></div>
         
         <!-- 实时语音文字显示栏 -->
@@ -73,24 +60,4 @@
 
 <script>
 // 完整卡牌库与别名
-const allCards = ["骑士","弓箭手","哥布林","炸弹兵","骷髅兵","野蛮人","亡灵","烈焰精灵","蝙蝠","迷你皮卡","哥布林团伙","野蛮人精锐","皇家卫队","重甲亡灵","皇家巨人","哥布林投矛手","骷髅飞龙","冰雪精灵","绿林团伙","烟花炮手","火枪手","瓦基丽武神","野猪骑士","三个火枪手","吹箭哥布林","治疗精灵","飞龙宝宝","骷髅军团","女巫","气球兵","黑暗王子","王子","哥布林巨人","猎人","雷电飞龙","骷髅守卫","巨石投手","飞斧屠夫","加农炮战车","掘地矿工","公主","超级骑士","寒冰法师","地狱飞龙","蛮羊骑士","熔岩猎犬","闪电法师","电磁炮","皇家幽灵","神箭游侠","幻影刺客","暗夜女巫","狂暴樵夫","女巫婆婆","渔夫","弓箭女皇","黄金圣骑","骷髅帝王","皇家塔公主","炮兵","飞刀女爵","皇家大厨","万箭齐发","电击法术","大雪球","皇家速递","火球","火箭","地震法术","野蛮人滚桶","哥布林飞桶","雷电法术","冰冻法术","伤害药水法术","镜像法术","狂暴法术","克隆法术","飓风法术","滚木","骷髅召唤","加农炮","迫击炮","特斯拉电磁塔","哥布林牢笼","骷髅墓碑","地狱之塔","哥布林小屋","烈焰熔炉","炸弹塔","圣水收集器","野蛮人小屋","十字连弩","哥布林钻机","法师","巨人","攻城炸弹人","皮卡超人","戈仑石人","战斗天使","皇家野猪","电击车小队","圣水戈仑","骷髅气球","骷髅巨人","飞行器"];
-
-const aliasMap = {"皮卡":"皮卡超人","逼卡":"皮卡超人","pika":"皮卡超人","皮卡丘":"皮卡超人","矿":"掘地矿工","矿工":"掘地矿工","墓园":"骷髅墓碑","墓地":"骷髅墓碑","坟":"骷髅墓碑","石头":"戈仑石人","戈仑":"戈仑石人","狗球":"戈仑石人","石":"戈仑石人","宝宝":"飞龙宝宝","小龙":"飞龙宝宝","飞龙":"飞龙宝宝","大电":"雷电法术","闪电":"雷电法术","电击":"雷电法术","箭雨":"万箭齐发","小箭雨":"万箭齐发","三枪":"三个火枪手","火枪":"三个火枪手","火枪手":"三个火枪手","超骑":"超级骑士","骑士超":"超级骑士","樵夫":"狂暴樵夫","狂暴樵夫":"狂暴樵夫","气球":"气球兵","球":"气球兵","冰法":"寒冰法师","火法":"闪电法师"};
-
-let slots = [], recognition = null, lastAddTime = 0;
-const toast = document.getElementById('toast');
-const speechText = document.getElementById('speechText');
-
-// UI函数
-function showToast(t){toast.textContent=t;toast.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>toast.classList.remove('show'),3000);}
-function updateSlots(){const s=document.getElementById('slots');s.innerHTML='';for(let i=0;i<8;i++){const d=document.createElement('div');d.className=`slot ${i<4?'used':'library'}`;d.textContent=slots[i]||(i<4?`已用 ${i+1}`:`卡组 ${i+5}`);s.appendChild(d);}document.getElementById('undoBtn').disabled=slots.length===0;}
-function addCard(n){const w=Date.now();if(w-lastAddTime<600)return;if(slots[0]===n)return;slots.unshift(n);if(slots.length>8)slots.pop();lastAddTime=w;showToast(n);updateSlots();}
-function renderAtlas(f=''){const l=document.getElementById('cardList');l.innerHTML='';allCards.filter(c=>c.includes(f)).forEach(c=>{const b=document.createElement('button');b.className='card-btn';b.textContent=c;b.onclick=()=>addCard(c);l.appendChild(b);});}
-document.getElementById('searchInput').addEventListener('input',e=>renderAtlas(e.target.value));
-renderAtlas();
-
-// 初始化
-updateSlots();
-</script>
-</body>
-</html>
+const allCards = ["骑士","弓箭手","哥布林","炸弹兵","骷髅兵","野蛮人","亡灵","烈焰精灵","蝙蝠","迷

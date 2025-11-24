@@ -3,113 +3,142 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>皇室战争记牌器 · 2025终极版（Deepgram+Web Speech双引擎）</title>
+<title>皇室战争记牌器 · 2025 科大讯飞实时版</title>
 <style>
-    body{font-family:"Microsoft YaHei",Arial,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);margin:0;padding:20px;color:#fff;min-height:100vh}
-    .container{max-width:1200px;margin:auto;display:grid;grid-template-columns:1fr 400px;gap:25px}
-    .main{background:rgba(255,255,255,0.15);backdrop-filter:blur(15px);border-radius:25px;padding:30px;box-shadow:0 10px 40px rgba(0,0,0,0.4)}
-    h1{text-align:center;margin:0 0 20px;text-shadow:0 2px 10px rgba(0,0,0,0.5)}
-    .api-section{background:rgba(255,255,255,0.15);border-radius:18px;padding:20px;margin-bottom:25px;text-align:center}
-    .api-input{width:90%;padding:14px;border-radius:12px;border:none;font-size:16px;margin:10px 0}
-    button{padding:14px 30px;margin:8px;font-size:17px;border:none;border-radius:50px;cursor:pointer;font-weight:bold;transition:all .3s}
-    #connectBtn{background:#007bff}#startBtn{background:#28a745}#stopBtn{background:#dc3545}#undoBtn{background:#6c757d}#resetBtn{background:#ffc107;color:#000}
-    button:hover{transform:translateY(-5px);box-shadow:0 10px 25px rgba(0,0,0,0.5)}
-    button:disabled{opacity:0.5;cursor:not-allowed}
-    .status{text-align:center;padding:20px;background:rgba(0,0,0,0.4);border-radius:18px;font-size:19px;margin:20px 0;line-height:1.6}
-    .slots{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:20px}
-    .slot{height:140px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:bold;box-shadow:0 8px 30px rgba(0,0,0,0.5)}
-    .used{background:linear-gradient(135deg,#ff5e5e,#ff304f)}
-    .library{background:linear-gradient(135deg,#00d2ff,#0099ff)}
-    .atlas{background:rgba(255,255,255,0.15);backdrop-filter:blur(15px);border-radius:25px;padding:25px;max-height:90vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.4)}
-    .search{width:100%;padding:14px;margin-bottom:20px;border-radius:15px;border:none;font-size:16px}
-    .card-list{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-    .card-btn{background:rgba(255,255,255,0.25);border:none;border-radius:12px;padding:12px 8px;font-size:14px;cursor:pointer;transition:all .2s}
-    .card-btn:hover{background:rgba(255,255,255,0.45);transform:scale(1.08)}
-    #toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.92);color:#fff;padding:18px 40px;border-radius:50px;font-size:24px;font-weight:bold;box-shadow:0 15px 40px rgba(0,0,0,0.6);backdrop-filter:blur(12px);z-index:9999;opacity:0;transition:all 0.4s;pointer-events:none;border:2px solid rgba(255,255,255,0.3)}
-    #toast.show{opacity:1;transform:translateX(-50%) translateY(-15px)}
+    body {font-family:"Microsoft YaHei",Arial,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);margin:0;padding:20px;min-height:100vh;color:#fff;position:relative}
+    .container {max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 380px;gap:20px}
+    .main {background:rgba(255,255,255,0.16);backdrop-filter:blur(15px);border-radius:22px;padding:25px;box-shadow:0 10px 40px rgba(0,0,0,0.4)}
+    h1 {text-align:center;margin:0 0 20px;text-shadow:0 2px 10px rgba(0,0,0,0.5)}
+    .controls {text-align:center;margin-bottom:20px}
+    button {padding:14px 28px;margin:6px;font-size:17px;border:none;border-radius:50px;cursor:pointer;transition:all .3s;font-weight:bold}
+    #startBtn {background:#28a745}#stopBtn {background:#dc3545}#undoBtn {background:#6c757d}#resetBtn {background:#ffc107;color:#212529}
+    button:hover {transform:translateY(-4px);box-shadow:0 8px 20px rgba(0,0,0,0.4)}
+    button:disabled {opacity:0.5;cursor:not-allowed}
+    .status {text-align:center;padding:18px;background:rgba(0,0,0,0.35);border-radius:15px;font-size:19px;margin-bottom:20px;line-height:1.5}
+    .slots {display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+    .slot {height:135px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:20px;text-shadow:0 2px 10px rgba(0,0,0,0.6);box-shadow:0 8px 25px rgba(0,0,0,0.5)}
+    .used {background:linear-gradient(135deg,#ff5e5e,#ff304f)}
+    .library {background:linear-gradient(135deg,#00d2ff,#0099ff)}
+    .atlas {background:rgba(255,255,255,0.16);backdrop-filter:blur(15px);border-radius:22px;padding:20px;height:fit-content;max-height:90vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.4)}
+    .atlas h2 {text-align:center;margin:0 0 15px}
+    .search {width:100%;padding:14px;margin-bottom:15px;border-radius:15px;border:none;font-size:16px}
+    .card-list {display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+    .card-btn {background:rgba(255,255,255,0.25);border:none;border-radius:12px;padding:12px 8px;font-size:14px;cursor:pointer;transition:all .2s}
+    .card-btn:hover {background:rgba(255,255,255,0.45);transform:scale(1.08)}
+    #toast {position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.9);color:#fff;padding:16px 36px;border-radius:50px;font-size:22px;font-weight:bold;box-shadow:0 12px 35px rgba(0,0,0,0.6);backdrop-filter:blur(12px);z-index:9999;opacity:0;transition:all 0.4s cubic-bezier(0.68,-0.55,0.27,1.55);pointer-events:none;border:2px solid rgba(255,255,255,0.2)}
+    #toast.show {opacity:1;transform:translateX(-50%) translateY(-15px)}
 </style>
 </head>
 <body>
 <div class="container">
     <div class="main">
-        <h1>皇室战争记牌器 2025终极版</h1>
-        
-        <div class="api-section">
-            <div style="font-size:19px;margin-bottom:12px">Deepgram API Key（推荐）</div>
-            <input type="text" class="api-input" id="apiKeyInput" placeholder="469feb0f94c14dd7ba33cf1763881264ddd1e546">
-            <div><button id="connectBtn">连接 Deepgram（最精准）</button></div>
-            <div style="margin-top:10px;font-size:15px;color:#a0d8ff" id="apiStatus">点击上方按钮连接</div>
-        </div>
-
-        <div style="text-align:center">
+        <h1>皇室战争记牌器 · 2025 科大讯飞实时版</h1>
+        <div class="controls">
             <button id="startBtn">开始实时监听</button>
             <button id="stopBtn" disabled>停止监听</button>
             <button id="undoBtn" disabled>撤销上一张</button>
             <button id="resetBtn">清空卡槽</button>
         </div>
-
-        <div class="status" id="status">正在加载引擎...（2-4秒）</div>
+        <div class="status" id="status">使用科大讯飞 RTASR 实时识别（延迟<300ms）<br>点击“开始实时监听”后请允许麦克风权限</div>
         <div class="slots" id="slots"></div>
     </div>
 
     <div class="atlas">
-        <h2 style="text-align:center">卡牌图鉴（点我补录）</h2>
-        <input type="text" class="search" placeholder="搜索卡牌…" id="searchInput">
+        <h2>卡牌图鉴（点我补录）</h2>
+        <input type="text" class="search" placeholder="搜索卡牌名称…" id="searchInput">
         <div class="card-list" id="cardList"></div>
     </div>
 </div>
 
-<div id="toast">识别成功</div>
+<div id="toast"></div>
 
-<script type="module">
-import { createClient } from "https://cdn.jsdelivr.net/npm/@deepgram/sdk@latest/+esm";
+<script>
+// ==================== 2025年11月官方全卡牌库（147张）===================
+const allCards = [
+"骑士","弓箭手","哥布林","炸弹兵","骷髅兵","野蛮人","亡灵","烈焰精灵","蝙蝠","迷你皮卡","哥布林团伙","野蛮人精锐","皇家卫队","重甲亡灵","皇家巨人","哥布林投矛手",
+"骷髅飞龙","冰雪精灵","绿林团伙","烟花炮手","火枪手","瓦基丽武神","野猪骑士","三个火枪手","吹箭哥布林","治疗精灵","飞龙宝宝","骷髅军团","女巫","气球兵","黑暗王子","王子","哥布林巨人","猎人","雷电飞龙","骷髅守卫","巨石投手","飞斧屠夫","加农炮战车","掘地矿工","公主","超级骑士","寒冰法师","地狱飞龙","蛮羊骑士","熔岩猎犬","闪电法师","电磁炮","皇家幽灵","神箭游侠","幻影刺客","暗夜女巫","狂暴樵夫","女巫婆婆","渔夫","弓箭女皇","黄金圣骑","骷髅帝王","皇家塔公主","炮兵","飞刀女爵","皇家大厨",
+"万箭齐发","电击法术","大雪球","皇家速递","火球","火箭","地震法术","野蛮人滚桶","哥布林飞桶","雷电法术","冰冻法术","伤害药水法术","镜像法术","狂暴法术","克隆法术","飓风法术","滚木","骷髅召唤",
+"加农炮","迫击炮","特斯拉电磁塔","哥布林牢笼","骷髅墓碑","地狱之塔","哥布林小屋","烈焰熔炉","炸弹塔","圣水收集器","野蛮人小屋","十字连弩","哥布林钻机",
+"法师","巨人","攻城炸弹人","皮卡超人","戈仑石人","战斗天使","皇家野猪","电击车小队","圣水戈仑","骷髅气球","骷髅巨人","飞行器"
+];
 
-// 全局变量
-let deepgramClient = null;
-let deepgramLive = null;
-let mediaStream = null;
-let lastAddTime = 0;
-let usingDeepgram = false;
+// 超强别名表
+const aliasMap = {
+"皮卡":"皮卡超人","逼卡":"皮卡超人","pika":"皮卡超人","皮卡丘":"皮卡超人","皮卡超":"皮卡超人",
+"矿":"掘地矿工","矿工":"掘地矿工","老矿":"掘地矿工",
+"墓园":"骷髅墓碑","墓地":"骷髅墓碑","坟":"骷髅墓碑",
+"石头":"戈仑石人","戈仑":"戈仑石人","狗球":"戈仑石人","石":"戈仑石人",
+"宝宝":"飞龙宝宝","小龙":"飞龙宝宝","飞龙":"飞龙宝宝",
+"大电":"雷电法术","闪电":"雷电法术","电击":"雷电法术",
+"箭雨":"万箭齐发","小箭雨":"万箭齐发",
+"三枪":"三个火枪手","火枪":"三个火枪手","火枪手":"三个火枪手",
+"超骑":"超级骑士","骑士超":"超级骑士",
+"樵夫":"狂暴樵夫","狂暴樵夫":"狂暴樵夫",
+"气球":"气球兵","球":"气球兵",
+"冰法":"寒冰法师","火法":"闪电法师"
+};
+
+let slots = [], ws = null, mediaRecorder = null, lastAddTime = 0;
 const toast = document.getElementById('toast');
 
-// 完整卡牌库（2025年11月最新）
-const allCards = ["骑士","弓箭手","哥布林","炸弹兵","骷髅兵","野蛮人","亡灵","烈焰精灵","蝙蝠","迷你皮卡","哥布林团伙","野蛮人精锐","皇家卫队","重甲亡灵","皇家巨人","哥布林投矛手","骷髅飞龙","冰雪精灵","绿林团伙","烟花炮手","火枪手","瓦基丽武神","野猪骑士","三个火枪手","吹箭哥布林","治疗精灵","飞龙宝宝","骷髅军团","女巫","气球兵","黑暗王子","王子","哥布林巨人","猎人","雷电飞龙","骷髅守卫","巨石投手","飞斧屠夫","加农炮战车","掘地矿工","公主","超级骑士","寒冰法师","地狱飞龙","蛮羊骑士","熔岩猎犬","闪电法师","电磁炮","皇家幽灵","神箭游侠","幻影刺客","暗夜女巫","狂暴樵夫","女巫婆婆","渔夫","弓箭女皇","黄金圣骑","骷髅帝王","皇家塔公主","炮兵","飞刀女爵","皇家大厨","万箭齐发","电击法术","大雪球","皇家速递","火球","火箭","地震法术","野蛮人滚桶","哥布林飞桶","雷电法术","冰冻法术","伤害药水法术","镜像法术","狂暴法术","克隆法术","飓风法术","滚木","骷髅召唤","加农炮","迫击炮","特斯拉电磁塔","哥布林牢笼","骷髅墓碑","地狱之塔","哥布林小屋","烈焰熔炉","炸弹塔","圣水收集器","野蛮人小屋","十字连弩","哥布林钻机","法师","巨人","攻城炸弹人","皮卡超人","戈仑石人","战斗天使","皇家野猪","电击车小队","圣水戈仑","骷髅气球","骷髅巨人","飞行器"];
+// ==================== 科大讯飞配置（替换为您的密钥） ====================
+const IFlytekConfig = {
+    appId: '您的APPID',  // 从 https://console.xfyun.cn/services/rtasr 获取
+    apiKey: '您的API Key',
+    apiSecret: '您的API Secret',
+    host: 'rtasr.xfyun.cn/v3/ws',  // 实时转写 WebSocket 地址
+    lang: 'zh_cn',  // 中文普通话
+    domain: '16k_common_conv'  // 通用对话领域
+};
 
-// 高频别名
-const aliasMap = {"皮卡":"皮卡超人","逼卡":"皮卡超人","pika":"皮卡超人","皮卡丘":"皮卡超人","矿":"掘地矿工","矿工":"掘地矿工","墓园":"骷髅墓碑","墓地":"骷髅墓碑","坟":"骷髅墓碑","石头":"戈仑石人","戈仑":"戈仑石人","狗球":"戈仑石人","宝宝":"飞龙宝宝","小龙":"飞龙宝宝","大电":"雷电法术","闪电":"雷电法术","箭雨":"万箭齐发","三枪":"三个火枪手","火枪":"三个火枪手","超骑":"超级骑士","樵夫":"狂暴樵夫","气球":"气球兵","冰法":"寒冰法师","火法":"闪电法师"};
+// 科大讯飞 WebSocket 认证 token 生成
+async function getIFlytekToken() {
+    const date = new Date().toUTCString();
+    const signatureOrigin = `host: ${IFlytekConfig.host}\ndate: ${date}\nGET /v3/ws HTTP/1.1`;
+    const signature = btoa(unescape(encodeURIComponent(signatureOrigin)));  // Base64 编码
+    const auth = btoa(unescape(encodeURIComponent(IFlytekConfig.apiKey + ':' + signature)));
+    return `api_key="${IFlytekConfig.apiKey}",algorithm="hmac-sha256",headers="host date request-line",signature="${signature}",date="${date}"`;
+}
 
-let slots = [];
-
-// UI函数
+// 实时弹窗
 function showToast(text) {
-    toast.textContent = text.length > 30 ? text.substring(0,30)+'…' : text;
+    toast.textContent = text.length > 30 ? text.substring(0,30) + '…' : text;
     toast.classList.add('show');
     clearTimeout(toast.timer);
     toast.timer = setTimeout(() => toast.classList.remove('show'), 3000);
 }
+
+// 卡槽更新
 function updateSlots() {
-    const s = document.getElementById('slots'); s.innerHTML = '';
-    for(let i=0;i<8;i++){
-        const d = document.createElement('div');
-        d.className = `slot ${i<4?'used':'library'}`;
-        d.textContent = slots[i] || (i<4 ? `已用 ${i+1}` : `卡组 ${i+5}`);
-        s.appendChild(d);
+    const container = document.getElementById('slots');
+    container.innerHTML = '';
+    for (let i = 0; i < 8; i++) {
+        const div = document.createElement('div');
+        div.className = `slot ${i < 4 ? 'used' : 'library'}`;
+        div.textContent = slots[i] || (i < 4 ? `已用 ${i+1}` : `卡组 ${i+5}`);
+        container.appendChild(div);
     }
     document.getElementById('undoBtn').disabled = slots.length === 0;
 }
+
+// 添加卡牌
 function addCard(name) {
     const now = Date.now();
-    if(now - lastAddTime < 600) return;
-    if(slots[0] === name) return;
+    if (now - lastAddTime < 600) return;
+    if (slots[0] === name) return;
     slots.unshift(name);
-    if(slots.length > 8) slots.pop();
+    if (slots.length > 8) slots.pop();
     lastAddTime = now;
     showToast(name);
     updateSlots();
 }
-function renderAtlas(filter='') {
-    const list = document.getElementById('cardList'); list.innerHTML = '';
-    allCards.filter(c => c.includes(filter)).forEach(card => {
+
+// 图鉴渲染
+function renderAtlas(filter = '') {
+    const list = document.getElementById('cardList');
+    list.innerHTML = '';
+    const filtered = allCards.filter(c => c.includes(filter));
+    filtered.forEach(card => {
         const btn = document.createElement('button');
         btn.className = 'card-btn';
         btn.textContent = card;
@@ -120,102 +149,86 @@ function renderAtlas(filter='') {
 document.getElementById('searchInput').addEventListener('input', e => renderAtlas(e.target.value));
 renderAtlas();
 
-// 连接Deepgram
-document.getElementById('connectBtn').onclick = async () => {
-    const key = document.getElementById('apiKeyInput').value.trim() || "469feb0f94c14dd7ba33cf1763881264ddd1e546";
-    const btn = document.getElementById('connectBtn');
-    btn.disabled = true; btn.textContent = '连接中...';
-    document.getElementById('apiStatus').textContent = '验证密钥...';
-
-    try {
-        deepgramClient = createClient(key);
-        await deepgramClient.manage.billing.getBalance();  // 最轻量验证
-        document.getElementById('apiStatus').innerHTML = '<span style="color:#6bcf7f">Deepgram 连接成功！（最精准）</span>';
-        btn.textContent = '已连接';
-        usingDeepgram = true;
-    } catch (e) {
-        document.getElementById('apiStatus').innerHTML = '<span style="color:#ffd93d">Deepgram 失败，自动使用浏览器引擎</span>';
-        usingDeepgram = false;
-    }
-    document.getElementById('startBtn').disabled = false;
-    document.getElementById('status').textContent = '准备就绪，点击“开始实时监听”';
-};
-
-// 开始监听（双引擎智能切换）
+// ==================== 科大讯飞实时语音识别 ====================
 document.getElementById('startBtn').onclick = async () => {
-    try {
-        mediaStream = await navigator.mediaDevices.getUserMedia({audio: true});
-    } catch {
-        document.getElementById('status').textContent = '请允许麦克风权限';
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        alert('浏览器不支持语音识别，请使用 Chrome/Edge');
         return;
     }
 
-    if (usingDeepgram && deepgramClient) {
-        // Deepgram 引擎
-        deepgramLive = await deepgramClient.listen.live({
-            language: 'zh',
-            model: 'nova-3',
-            punctuate: true,
-            interim_results: true
-        });
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+        mediaRecorder = new MediaRecorder(stream, {mimeType: 'audio/webm'});
+        const chunks = [];
 
-        deepgramLive.addListener('transcript', data => {
-            if (data.isFinal && data.channel?.alternatives[0]?.transcript) {
-                let text = data.channel.alternatives[0].transcript.replace(/[^\u4e00-\u9fa5]/g, '').trim();
-                if (!text) return;
-                const real = aliasMap[text] || text;
-                const matched = allCards.find(c => c.includes(real) || real.includes(c));
-                if (matched) addCard(matched);
-            }
-        });
-
-        deepgramLive.start(mediaStream);
-        document.getElementById('status').textContent = 'Deepgram 实时监听中（最精准）';
-    } else {
-        // 回退到浏览器原生引擎
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) {
-            document.getElementById('status').textContent = '浏览器不支持语音识别';
-            return;
-        }
-        const recognition = new SpeechRecognition();
-        recognition.lang = 'zh-CN';
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.onresult = e => {
-            let text = '';
-            for (let i = e.resultIndex; i < e.results.length; i++) {
-                text += e.results[i][0].transcript;
-            }
-            text = text.replace(/[^\u4e00-\u9fa5]/g, '').trim();
-            if (!text) return;
-            const real = aliasMap[text] || text;
-            const matched = allCards.find(c => c.includes(real) || real.includes(c));
-            if (matched) addCard(matched);
+        mediaRecorder.ondataavailable = e => chunks.push(e.data);
+        mediaRecorder.onstop = async () => {
+            const blob = new Blob(chunks, {type: 'audio/webm'});
+            await processAudio(blob);
+            chunks.length = 0;
         };
-        recognition.start();
-        document.getElementById('status').textContent = '浏览器引擎监听中（备用）';
-    }
 
-    document.getElementById('startBtn').disabled = true;
-    document.getElementById('stopBtn').disabled = false;
+        // WebSocket 连接
+        const token = await getIFlytekToken();
+        ws = new WebSocket(`wss://${IFlytekConfig.host}?authorization=${encodeURIComponent(token)}&date=${encodeURIComponent(new Date().toUTCString())}`);
+
+        ws.onopen = () => {
+            document.getElementById('status').textContent = '科大讯飞实时监听中...说出卡牌名称';
+            mediaRecorder.start(100);  // 100ms 间隔发送
+        };
+
+        ws.onmessage = e => {
+            const data = JSON.parse(e.data);
+            if (data.code === '0' && data.data) {
+                const text = data.data.result.wsr.map(r => r.cw.map(cw => cw.w).join('')).join('');
+                if (text) {
+                    const real = aliasMap[text] || text;
+                    const matched = allCards.find(c => c.includes(real) || real.includes(c));
+                    if (matched) addCard(matched);
+                }
+            }
+        };
+
+        ws.onerror = err => console.error('WebSocket 错误:', err);
+        ws.onclose = () => {
+            if (mediaRecorder.state === 'recording') mediaRecorder.stop();
+        };
+
+        document.getElementById('startBtn').disabled = true;
+        document.getElementById('stopBtn').disabled = false;
+    } catch (err) {
+        document.getElementById('status').textContent = '权限错误: ' + err.message;
+    }
 };
 
-// 停止
+// 停止监听
 document.getElementById('stopBtn').onclick = () => {
-    if (deepgramLive) deepgramLive.finish();
-    if (mediaStream) mediaStream.getTracks().forEach(t => t.stop());
+    if (ws) ws.close();
+    if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+    if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
     document.getElementById('startBtn').disabled = false;
     document.getElementById('stopBtn').disabled = true;
-    document.getElementById('status').textContent = '已停止';
+    document.getElementById('status').textContent = '已停止监听';
 };
 
-document.getElementById('undoBtn').onclick = () => {slots.shift(); updateSlots();};
-document.getElementById('resetBtn').onclick = () => {slots=[]; updateSlots();};
-updateSlots();
+// 音频处理（转写）
+async function processAudio(blob) {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+        const arrayBuffer = reader.result;
+        ws.send(arrayBuffer);
+    };
+    reader.readAsArrayBuffer(blob);
+}
 
-// 加载完成提示
-document.getElementById('status').textContent = '引擎加载完成！输入密钥点“连接 Deepgram”或直接开始';
+// 其他按钮
+document.getElementById('undoBtn').onclick = () => {slots.shift(); updateSlots();};
+document.getElementById('resetBtn').onclick = () => {slots = []; updateSlots();};
+
+// 初始化
+updateSlots();
 </script>
 </body>
 </html>

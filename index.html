@@ -3,16 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>皇室战争记牌器 · 2025 文字识别版</title>
+<title>皇室战争记牌器 · 2025 语音实时显示版</title>
 <style>
     body{font-family:"Microsoft YaHei",Arial,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);margin:0;padding:20px;color:#fff;min-height:100vh;position:relative}
     .container{max-width:1200px;margin:auto;display:grid;grid-template-columns:1fr 400px;gap:25px}
     .main{background:rgba(255,255,255,0.15);backdrop-filter:blur(15px);border-radius:25px;padding:30px;box-shadow:0 10px 40px rgba(0,0,0,0.4)}
     h1{text-align:center;margin:0 0 20px}
-    .ocr-section{background:rgba(255,255,255,0.15);border-radius:18px;padding:20px;margin-bottom:25px;text-align:center}
-    input[type="file"]{width:100%;padding:10px;border-radius:12px;border:none;font-size:16px;margin:10px 0}
-    button{padding:14px 30px;margin:8px;font-size:17px;border:none;border-radius:50px;cursor:pointer;font-weight:bold;transition:all .3s}
-    #ocrBtn{background:#17a2b8}#startBtn{background:#28a745}#stopBtn{background:#dc3545}#undoBtn{background:#6c757d}#resetBtn{background:#ffc107;color:#000}
+    button{padding:14px 30px;margin:8px;font-size:18px;border:none;border-radius:50px;cursor:pointer;font-weight:bold;transition:all .3s}
+    #startBtn{background:#28a745}#stopBtn{background:#dc3545}#undoBtn{background:#6c757d}#resetBtn{background:#ffc107;color:#000}
     button:hover{transform:translateY(-5px);box-shadow:0 10px 25px rgba(0,0,0,0.5)}
     button:disabled{opacity:0.5;cursor:not-allowed}
     .status{text-align:center;padding:20px;background:rgba(0,0,0,0.4);border-radius:18px;font-size:19px;margin:20px 0}
@@ -25,33 +23,32 @@
     .card-list{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
     .card-btn{background:rgba(255,255,255,0.25);border:none;border-radius:12px;padding:12px 8px;font-size:14px;cursor:pointer;transition:all .2s}
     .card-btn:hover{background:rgba(255,255,255,0.45);transform:scale(1.08)}
-    #toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.92);color:#fff;padding:18px 40px;border-radius:50px;font-size:24px;font-weight:bold;box-shadow:0 15px 40px rgba(0,0,0,0.6);backdrop-filter:blur(12px);z-index:9999;opacity:0;transition:all .4s;pointer-events:none;border:2px solid rgba(255,255,255,0.3)}
+    
+    /* 新增：下方实时文字显示栏 */
+    .speech-text{background:rgba(0,0,0,0.6);border-radius:20px;padding:20px;margin-top:20px;text-align:center;font-size:24px;font-weight:bold;min-height:80px;border:2px solid rgba(255,255,255,0.3);backdrop-filter:blur(10px)}
+    #toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.92);color:#fff;padding:18px 40px;border-radius:50px;font-size:24px;font-weight:bold;box-shadow:0 15px 40px rgba(0,0,0,0.6);z-index:9999;opacity:0;transition:all .4s}
     #toast.show{opacity:1;transform:translateX(-50%) translateY(-15px)}
-    .progress{display:none;text-align:center;margin:10px 0;color:#ffd93d}
 </style>
 </head>
 <body>
 <div class="container">
     <div class="main">
-        <h1>皇室战争记牌器 2025 文字识别版</h1>
+        <h1>皇室战争记牌器 2025 语音实时显示版</h1>
         
-        <div class="ocr-section">
-            <div style="font-size:18px;margin-bottom:10px">文字识别（OCR）功能</div>
-            <input type="file" id="imageInput" accept="image/*,.pdf" multiple>
-            <button id="ocrBtn">上传图片识别卡牌</button>
-            <div class="progress" id="progress">识别中...（0.5-2秒）</div>
-            <div style="font-size:14px;color:#a0d8ff;margin-top:10px" id="ocrStatus">支持游戏截图、PDF扫描，自动识别卡牌名称</div>
-        </div>
-
         <div style="text-align:center">
-            <button id="startBtn">开始语音监听</button>
+            <button id="startBtn">开始实时监听</button>
             <button id="stopBtn" disabled>停止监听</button>
             <button id="undoBtn" disabled>撤销上一张</button>
             <button id="resetBtn">清空卡槽</button>
         </div>
 
-        <div class="status" id="status">OCR 文字识别已就绪，上传图片测试</div>
+        <div class="status" id="status">点击“开始实时监听”后说出卡牌名称</div>
         <div class="slots" id="slots"></div>
+        
+        <!-- 新增：语音识别文字实时显示栏 -->
+        <div class="speech-text" id="speechText">
+            听到的内容会显示在这里...
+        </div>
     </div>
 
     <div class="atlas">
@@ -63,140 +60,74 @@
 
 <div id="toast">识别成功</div>
 
-<!-- Tesseract.js OCR 引擎（免费开源，离线中文支持） -->
-<script src="https://unpkg.com/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
 <script>
-// 完整卡牌库与别名（2025年11月最新）
+// 完整卡牌库与别名
 const allCards = ["骑士","弓箭手","哥布林","炸弹兵","骷髅兵","野蛮人","亡灵","烈焰精灵","蝙蝠","迷你皮卡","哥布林团伙","野蛮人精锐","皇家卫队","重甲亡灵","皇家巨人","哥布林投矛手","骷髅飞龙","冰雪精灵","绿林团伙","烟花炮手","火枪手","瓦基丽武神","野猪骑士","三个火枪手","吹箭哥布林","治疗精灵","飞龙宝宝","骷髅军团","女巫","气球兵","黑暗王子","王子","哥布林巨人","猎人","雷电飞龙","骷髅守卫","巨石投手","飞斧屠夫","加农炮战车","掘地矿工","公主","超级骑士","寒冰法师","地狱飞龙","蛮羊骑士","熔岩猎犬","闪电法师","电磁炮","皇家幽灵","神箭游侠","幻影刺客","暗夜女巫","狂暴樵夫","女巫婆婆","渔夫","弓箭女皇","黄金圣骑","骷髅帝王","皇家塔公主","炮兵","飞刀女爵","皇家大厨","万箭齐发","电击法术","大雪球","皇家速递","火球","火箭","地震法术","野蛮人滚桶","哥布林飞桶","雷电法术","冰冻法术","伤害药水法术","镜像法术","狂暴法术","克隆法术","飓风法术","滚木","骷髅召唤","加农炮","迫击炮","特斯拉电磁塔","哥布林牢笼","骷髅墓碑","地狱之塔","哥布林小屋","烈焰熔炉","炸弹塔","圣水收集器","野蛮人小屋","十字连弩","哥布林钻机","法师","巨人","攻城炸弹人","皮卡超人","戈仑石人","战斗天使","皇家野猪","电击车小队","圣水戈仑","骷髅气球","骷髅巨人","飞行器"];
 
-const aliasMap = {"皮卡":"皮卡超人","逼卡":"皮卡超人","pika":"皮卡超人","皮卡丘":"皮卡超人","矿":"掘地矿工","矿工":"掘地矿工","墓园":"骷髅墓碑","墓地":"骷髅墓碑","坟":"骷髅墓碑","石头":"戈仑石人","戈仑":"戈仑石人","狗球":"戈仑石人","石":"戈仑石人","宝宝":"飞龙宝宝","小龙":"飞龙宝宝","飞龙":"飞龙宝宝","大电":"雷电法术","闪电":"雷电法术","电击":"雷电法术","箭雨":"万箭齐发","小箭雨":"万箭齐发","三枪":"三个火枪手","火枪":"三个火枪手","火枪手":"三个火枪手","超骑":"超级骑士","骑士超":"超级骑士","樵夫":"狂暴樵夫","狂暴樵夫":"狂暴樵夫","气球":"气球兵","球":"气球兵","冰法":"寒冰法师","火法":"闪电法师"};
+const aliasMap = {"皮卡":"皮卡超人","逼卡":"皮卡超人","pika":"皮卡超人","矿":"掘地矿工","墓园":"骷髅墓碑","石头":"戈仑石人","宝宝":"飞龙宝宝","大电":"雷电法术","三枪":"三个火枪手","超骑":"超级骑士","樵夫":"狂暴樵夫","气球":"气球兵","冰法":"寒冰法师","火法":"闪电法师"};
 
-let slots = [], lastAddTime = 0;
+let slots = [], recognition = null, lastAddTime = 0;
 const toast = document.getElementById('toast');
+const speechText = document.getElementById('speechText');
 
-// UI 函数
-function showToast(text) {
-    toast.textContent = text.length > 30 ? text.substring(0, 30) + '…' : text;
-    toast.classList.add('show');
-    clearTimeout(toast.timer);
-    toast.timer = setTimeout(() => toast.classList.remove('show'), 3000);
-}
-function updateSlots() {
-    const container = document.getElementById('slots');
-    container.innerHTML = '';
-    for (let i = 0; i < 8; i++) {
-        const div = document.createElement('div');
-        div.className = `slot ${i < 4 ? 'used' : 'library'}`;
-        div.textContent = slots[i] || (i < 4 ? `已用 ${i + 1}` : `卡组 ${i + 5}`);
-        container.appendChild(div);
-    }
-    document.getElementById('undoBtn').disabled = slots.length === 0;
-}
-function addCard(name) {
-    const now = Date.now();
-    if (now - lastAddTime < 600) return;
-    if (slots[0] === name) return;
-    slots.unshift(name);
-    if (slots.length > 8) slots.pop();
-    lastAddTime = now;
-    showToast(name);
-    updateSlots();
-}
-function renderAtlas(filter = '') {
-    const list = document.getElementById('cardList');
-    list.innerHTML = '';
-    const filtered = allCards.filter(c => c.includes(filter));
-    filtered.forEach(card => {
-        const btn = document.createElement('button');
-        btn.className = 'card-btn';
-        btn.textContent = card;
-        btn.onclick = () => addCard(card);
-        list.appendChild(btn);
-    });
-}
-document.getElementById('searchInput').addEventListener('input', e => renderAtlas(e.target.value));
+// UI函数
+function showToast(t){toast.textContent=t;toast.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>toast.classList.remove('show'),3000);}
+function updateSlots(){const s=document.getElementById('slots');s.innerHTML='';for(let i=0;i<8;i++){const d=document.createElement('div');d.className=`slot ${i<4?'used':'library'}`;d.textContent=slots[i]||(i<4?`已用 ${i+1}`:`卡组 ${i+5}`);s.appendChild(d);}document.getElementById('undoBtn').disabled=slots.length===0;}
+function addCard(n){const w=Date.now();if(w-lastAddTime<600)return;if(slots[0]===n)return;slots.unshift(n);if(slots.length>8)slots.pop();lastAddTime=w;showToast(n);updateSlots();}
+function renderAtlas(f=''){const l=document.getElementById('cardList');l.innerHTML='';allCards.filter(c=>c.includes(f)).forEach(c=>{const b=document.createElement('button');b.className='card-btn';b.textContent=c;b.onclick=()=>addCard(c);l.appendChild(b);});}
+document.getElementById('searchInput').addEventListener('input',e=>renderAtlas(e.target.value));
 renderAtlas();
-
-// 初始化槽位
 updateSlots();
 
-// ==================== OCR 文字识别功能 ====================
-document.getElementById('ocrBtn').onclick = () => {
-    const fileInput = document.getElementById('imageInput');
-    const files = fileInput.files;
-    if (files.length === 0) {
-        alert('请选择图片或 PDF 文件');
-        return;
-    }
-
-    const progress = document.getElementById('progress');
-    const status = document.getElementById('ocrStatus');
-    progress.style.display = 'block';
-    status.textContent = '识别中...（0.5-2秒）';
-
-    Array.from(files).forEach((file, index) => {
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const imageData = e.target.result;
-            try {
-                // 使用 Tesseract.js 离线 OCR 识别中文
-                const { data: { text } } = await Tesseract.recognize(imageData, 'chi_sim', {
-                    logger: m => console.log(m)  // 日志输出
-                });
-                const cleanedText = text.replace(/[\s\n\r]/g, '').trim();  // 清理空白
-                if (cleanedText) {
-                    const real = aliasMap[cleanedText] || cleanedText;
-                    const matched = allCards.find(c => c.includes(real) || real.includes(c));
-                    if (matched) {
-                        addCard(matched);
-                        status.textContent = `识别成功：${matched}（第 ${index + 1} 张）`;
-                    } else {
-                        status.textContent = `识别文字：${cleanedText}（未匹配卡牌）`;
-                    }
-                } else {
-                    status.textContent = '未识别到文字，请检查图片清晰度';
-                }
-            } catch (error) {
-                console.error('OCR 识别失败:', error);
-                status.textContent = '识别失败，请重试或检查图片';
-            }
-            progress.style.display = 'none';
-        };
-        reader.readAsDataURL(file);
-    });
-};
-
-// ==================== 语音监听功能（备用，百度 API） ====================
-let recognition = null;
+// 语音识别 + 实时文字显示
 document.getElementById('startBtn').onclick = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-        alert('浏览器不支持语音识别，请使用 Chrome/Edge');
+        alert('您的浏览器不支持语音识别，请使用最新版 Chrome/Edge');
         return;
     }
+
     recognition = new SpeechRecognition();
     recognition.lang = 'zh-CN';
     recognition.continuous = true;
-    recognition.interimResults = false;
+    recognition.interimResults = true;  // 关键：开启实时显示
 
-    recognition.onresult = (e) => {
-        let text = '';
-        for (let i = e.resultIndex; i < e.results.length; i++) {
-            text += e.results[i][0].transcript;
+    recognition.onresult = (event) => {
+        let finalText = '';
+        let interimText = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+                finalText += transcript;
+            } else {
+                interimText += transcript;
+            }
         }
-        text = text.replace(/[^\u4e00-\u9fa5]/g, '').trim();
-        if (!text) return;
-        const real = aliasMap[text] || text;
-        const matched = allCards.find(c => c.includes(real) || real.includes(c));
-        if (matched) addCard(matched);
+
+        // 显示最终+临时文字
+        speechText.textContent = finalText || interimText || '正在听...';
+
+        // 只在最终结果时匹配卡牌
+        if (finalText) {
+            const cleanText = finalText.replace(/[^\u4e00-\u9fa5]/g, '').trim();
+            if (cleanText) {
+                const real = aliasMap[cleanText] || cleanText;
+                const matched = allCards.find(c => c.includes(real) || real.includes(c));
+                if (matched) addCard(matched);
+            }
+        }
     };
 
     recognition.onerror = (e) => {
-        document.getElementById('status').textContent = '语音识别错误: ' + e.error;
+        speechText.textContent = '语音错误: ' + e.error;
     };
 
     recognition.onstart = () => {
-        document.getElementById('status').textContent = '语音监听中...说出卡牌名称';
+        speechText.textContent = '正在听...';
+        document.getElementById('status').textContent = '实时监听中（文字会显示在下方）';
+        document.getElementById('startBtn').disabled = true;
+        document.getElementById('stopBtn').disabled = false;
     };
 
     recognition.onend = () => {
@@ -206,15 +137,14 @@ document.getElementById('startBtn').onclick = () => {
     };
 
     recognition.start();
-    document.getElementById('startBtn').disabled = true;
-    document.getElementById('stopBtn').disabled = false;
 };
 
 document.getElementById('stopBtn').onclick = () => {
     if (recognition) recognition.stop();
+    speechText.textContent = '已停止监听';
     document.getElementById('startBtn').disabled = false;
     document.getElementById('stopBtn').disabled = true;
-    document.getElementById('status').textContent = '已停止监听';
+    document.getElementById('status').textContent = '已停止';
 };
 
 document.getElementById('undoBtn').onclick = () => {slots.shift(); updateSlots();};

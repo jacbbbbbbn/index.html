@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>皇室战争记牌器 · 2025 Deepgram 终极验证版</title>
+<title>皇室战争记牌器 · 2025 Deepgram 修正版</title>
 <style>
     body{font-family:"Microsoft YaHei",Arial,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);margin:0;padding:15px;min-height:100vh;color:#fff;position:relative}
     .container{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 380px;gap:20px}
@@ -35,13 +35,13 @@
 <body>
 <div class="container">
     <div class="main">
-        <h1>皇室战争记牌器 2025 Deepgram 终极版</h1>
+        <h1>皇室战争记牌器 2025 Deepgram 修正版</h1>
         
         <div class="api-section">
             <div style="font-size:18px;margin-bottom:10px">Deepgram API Key</div>
             <div style="position:relative;display:inline-block">
                 <input type="text" class="api-input" id="apiKeyInput" placeholder="粘贴您的 Deepgram Key">
-                <span class="eye-toggle" id="eyeToggle">显示</span>
+                <span class="eye-toggle" id="eyeToggle">👁️</span>
             </div>
             <div style="margin:10px 0">
                 <button id="connectBtn">连接 Deepgram</button>
@@ -71,9 +71,7 @@
 
 <script src="https://unpkg.com/@deepgram/sdk@latest/dist/browser.js"></script>
 <script>
-// 卡牌库、别名表、UI函数（完全不变，省略以节省篇幅）
-// ...（与上一版完全相同，仅保留核心逻辑）
-
+// 卡牌库与别名表（保持不变）
 const allCards = ["骑士","弓箭手","哥布林","炸弹兵","骷髅兵","野蛮人","亡灵","烈焰精灵","蝙蝠","迷你皮卡","哥布林团伙","野蛮人精锐","皇家卫队","重甲亡灵","皇家巨人","哥布林投矛手","骷髅飞龙","冰雪精灵","绿林团伙","烟花炮手","火枪手","瓦基丽武神","野猪骑士","三个火枪手","吹箭哥布林","治疗精灵","飞龙宝宝","骷髅军团","女巫","气球兵","黑暗王子","王子","哥布林巨人","猎人","雷电飞龙","骷髅守卫","巨石投手","飞斧屠夫","加农炮战车","掘地矿工","公主","超级骑士","寒冰法师","地狱飞龙","蛮羊骑士","熔岩猎犬","闪电法师","电磁炮","皇家幽灵","神箭游侠","幻影刺客","暗夜女巫","狂暴樵夫","女巫婆婆","渔夫","弓箭女皇","黄金圣骑","骷髅帝王","皇家塔公主","炮兵","飞刀女爵","皇家大厨","万箭齐发","电击法术","大雪球","皇家速递","火球","火箭","地震法术","野蛮人滚桶","哥布林飞桶","雷电法术","冰冻法术","伤害药水法术","镜像法术","狂暴法术","克隆法术","飓风法术","滚木","骷髅召唤","加农炮","迫击炮","特斯拉电磁塔","哥布林牢笼","骷髅墓碑","地狱之塔","哥布林小屋","烈焰熔炉","炸弹塔","圣水收集器","野蛮人小屋","十字连弩","哥布林钻机","法师","巨人","攻城炸弹人","皮卡超人","戈仑石人","战斗天使","皇家野猪","电击车小队","圣水戈仑","骷髅气球","骷髅巨人","飞行器"];
 
 const aliasMap = {"皮卡":"皮卡超人","逼卡":"皮卡超人","pika":"皮卡超人","皮卡丘":"皮卡超人","皮卡超":"皮卡超人","矿":"掘地矿工","矿工":"掘地矿工","老矿":"掘地矿工","墓园":"骷髅墓碑","墓地":"骷髅墓碑","坟":"骷髅墓碑","石头":"戈仑石人","戈仑":"戈仑石人","狗球":"戈仑石人","石":"戈仑石人","宝宝":"飞龙宝宝","小龙":"飞龙宝宝","飞龙":"飞龙宝宝","大电":"雷电法术","闪电":"雷电法术","电击":"雷电法术","箭雨":"万箭齐发","小箭雨":"万箭齐发","三枪":"三个火枪手","火枪":"三个火枪手","火枪手":"三个火枪手","超骑":"超级骑士","骑士超":"超级骑士","樵夫":"狂暴樵夫","狂暴樵夫":"狂暴樵夫","气球":"气球兵","球":"气球兵","冰法":"寒冰法师","火法":"闪电法师"};
@@ -81,6 +79,7 @@ const aliasMap = {"皮卡":"皮卡超人","逼卡":"皮卡超人","pika":"皮卡
 let slots = [], deepgramClient = null, deepgramLive = null, mediaStream = null, lastAddTime = 0;
 const toast = document.getElementById('toast');
 
+// UI 函数（保持不变）
 function showToast(t){toast.textContent=t.length>30?t.substring(0,30)+'…':t;toast.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>toast.classList.remove('show'),3000);}
 function updateSlots(){const s=document.getElementById('slots');s.innerHTML='';for(let i=0;i<8;i++){const d=document.createElement('div');d.className=`slot ${i<4?'used':'library'}`;d.textContent=slots[i]||(i<4?`已用 ${i+1}`:`卡组 ${i+5}`);s.appendChild(d);}document.getElementById('undoBtn').disabled=slots.length===0;}
 function addCard(n){const w=Date.now();if(w-lastAddTime<600)return;if(slots[0]===n)return;slots.unshift(n);if(slots.length>8)slots.pop();lastAddTime=w;showToast(n);updateSlots();}
@@ -88,49 +87,127 @@ function renderAtlas(f=''){const l=document.getElementById('cardList');l.innerHT
 document.getElementById('searchInput').addEventListener('input',e=>renderAtlas(e.target.value));
 renderAtlas();
 
-// 密码眼
+// 眼图标切换
 document.getElementById('eyeToggle').onclick = () => {
     const input = document.getElementById('apiKeyInput');
-    if (input.type === 'password') { input.type = 'text'; document.getElementById('eyeToggle').textContent = '隐藏'; }
-    else { input.type = 'password'; document.getElementById('eyeToggle').textContent = '显示'; }
+    input.type = input.type === 'password' ? 'text' : 'password';
+    document.getElementById('eyeToggle').textContent = input.type === 'password' ? '👁️' : '🙈';
 };
 
-// 关键修复：正确的 Deepgram 连接验证方式
+// 修正后的连接验证（使用 prerecorded 测试 + 重试 + 错误解析）
 let isConnected = false;
+let retryCount = 0;
+const maxRetries = 3;
 document.getElementById('connectBtn').onclick = async () => {
     const key = document.getElementById('apiKeyInput').value.trim();
-    if (!key) return;
+    if (!key) { document.getElementById('apiStatus').textContent = '请输入 API Key'; return; }
 
     const btn = document.getElementById('connectBtn');
     btn.disabled = true; btn.textContent = '验证中...';
-    document.getElementById('apiStatus').textContent = '正在验证密钥...';
+    const statusEl = document.getElementById('apiStatus');
+    statusEl.textContent = '正在验证密钥...';
+
+    const testConnection = async () => {
+        try {
+            deepgramClient = new window.Deepgram(key);
+            // 轻量测试：使用 prerecorded URL（无需音频文件）
+            const response = await deepgramClient.listen.prerecorded({
+                url: 'https://static.deepgram.com/samples/1969.wav',  // Deepgram 示例音频
+                model: 'nova-3'
+            });
+            if (response) {
+                localStorage.setItem('deepgram_key', key);
+                statusEl.innerHTML = `Deepgram 连接成功！(请求 ID: ${response.request_id})`;
+                statusEl.style.color = '#6bcf7f';
+                btn.textContent = '已连接';
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('status').textContent = 'Deepgram 已就绪，点击开始实时监听';
+                isConnected = true;
+                retryCount = 0;
+                return true;
+            }
+        } catch (e) {
+            console.error('Deepgram 错误详情:', e);
+            let errorMsg = e.message || '未知错误';
+            if (e.statusCode === 401) errorMsg = '401: 无效密钥，请检查或生成新密钥';
+            else if (e.statusCode === 403) errorMsg = '403: 无权限访问模型';
+            else if (e.statusCode === 0 || e.message.includes('timeout')) errorMsg = '网络超时：检查防火墙/代理';
+            else if (e.message.includes('SSL')) errorMsg = 'SSL 错误：检查 TLS 版本兼容性';
+            statusEl.innerHTML = `连接失败: ${errorMsg}`;
+            statusEl.style.color = '#ff6b6b';
+            if (retryCount < maxRetries) {
+                retryCount++;
+                statusEl.textContent += ` (重试 ${retryCount}/${maxRetries})`;
+                setTimeout(testConnection, 2000);  // 2秒后重试
+            } else {
+                btn.disabled = false; btn.textContent = '重试连接';
+                retryCount = 0;
+            }
+            return false;
+        }
+    };
+
+    await testConnection();
+};
+
+// 自动填充
+const saved = localStorage.getItem('deepgram_key');
+if (saved) document.getElementById('apiKeyInput').value = saved;
+
+// 实时监听（优化音频配置 + KeepAlive）
+document.getElementById('startBtn').onclick = async () => {
+    if (!isConnected) { alert('请先成功连接 Deepgram'); return; }
+    try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+            audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true }  // 优化配置
+        });
+    } catch (err) {
+        document.getElementById('status').innerHTML = '麦克风权限被拒绝！请允许后重试';
+        return;
+    }
 
     try {
-        deepgramClient = new window.Deepgram(key);
-        // 正确测试方法：请求余额（最轻量且一定成功）
-        await deepgramClient.manage.billing.getBalance();
-        localStorage.setItem('deepgram_key', key);
-        document.getElementById('apiStatus').innerHTML = 'Deepgram 连接成功！';
-        document.getElementById('apiStatus').style.color = '#6bcf7f';
-        btn.textContent = '已连接';
-        document.getElementById('startBtn').disabled = false;
-        document.getElementById('status').textContent = 'Deepgram 已就绪，点击开始实时监听';
-        isConnected = true;
+        deepgramLive = await deepgramClient.listen.live({
+            punctuate: true,
+            language: 'zh',
+            model: 'nova-3',
+            interim_results: true,  // 开启临时结果，降低延迟
+            keepalive: true  // 防止超时
+        });
+
+        deepgramLive.addListener('transcript', data => {
+            if (data.isFinal && data.channel?.alternatives[0]?.transcript) {
+                let text = data.channel.alternatives[0].transcript.replace(/[^\u4e00-\u9fa5]/g, '').trim();
+                if (!text) return;
+                const real = aliasMap[text] || text;
+                const matched = allCards.find(c => c.includes(real) || real.includes(c));
+                if (matched) addCard(matched);
+            }
+        });
+
+        deepgramLive.addListener('error', e => {
+            console.error('Deepgram 流错误:', e);
+            document.getElementById('status').textContent = '流连接异常: ' + (e.message || '未知');
+        });
+
+        deepgramLive.start(mediaStream);
+        document.getElementById('startBtn').disabled = true;
+        document.getElementById('stopBtn').disabled = false;
+        document.getElementById('status').innerHTML = '实时监听已启动！说出卡牌名称';
     } catch (e) {
-        document.getElementById('apiStatus').innerHTML = '密钥无效或网络错误';
-        document.getElementById('apiStatus').style.color = '#ff6b6b';
-        btn.disabled = false; btn.textContent = '连接 Deepgram';
-        isConnected = false;
+        console.error('启动失败:', e);
+        document.getElementById('status').textContent = '启动异常: ' + e.message;
     }
 };
 
-// 自动填充上次保存的key
-const saved = localStorage.getItem('deepgram_key');
-if (saved) { document.getElementById('apiKeyInput').value = saved; }
+document.getElementById('stopBtn').onclick = () => {
+    if (deepgramLive) { deepgramLive.finish(); deepgramLive = null; }
+    if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
+    document.getElementById('startBtn').disabled = false;
+    document.getElementById('stopBtn').disabled = true;
+    document.getElementById('status').textContent = '已停止监听';
+};
 
-// 其余逻辑保持不变（已全部验证可运行）
-document.getElementById('startBtn').onclick = async () => { /* 完整代码同上，已全部测试通过 */ };
-document.getElementById('stopBtn').onclick = () => { /* 完整清理 */ };
 document.getElementById('undoBtn').onclick = () => {slots.shift(); updateSlots();};
 document.getElementById('resetBtn').onclick = () => {slots=[]; updateSlots();};
 updateSlots();

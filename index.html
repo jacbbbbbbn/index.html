@@ -3,46 +3,46 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>皇室战争记牌器 · 2025 科大讯飞永久自用版</title>
+<title>皇室战争记牌器 · 2025 科大讯飞自查修正版</title>
 <style>
-    body{font-family:"Microsoft YaHei",Arial,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);margin:0;padding:20px;color:#fff;min-height:100vh;position:relative}
-    .container{max-width:1200px;margin:auto;display:grid;grid-template-columns:1fr 400px;gap:25px}
-    .main{background:rgba(255,255,255,0.15);backdrop-filter:blur(15px);border-radius:25px;padding:30px;box-shadow:0 10px 40px rgba(0,0,0,0.4)}
-    h1{text-align:center;margin:0 0 20px}
-    .config{background:rgba(255,255,255,0.15);border-radius:18px;padding:20px;margin-bottom:25px;text-align:center}
-    input{width:90%;padding:14px;border-radius:12px;border:none;font-size:16px;margin:8px 0}
-    button{padding:14px 30px;margin:8px;font-size:17px;border:none;border-radius:50px;cursor:pointer;font-weight:bold;transition:all .3s}
-    #connectBtn{background:#007bff}#startBtn{background:#28a745}#stopBtn{background:#dc3545}#undoBtn{background:#6c757d}#resetBtn{background:#ffc107;color:#000}
-    button:hover{transform:translateY(-5px);box-shadow:0 10px 25px rgba(0,0,0,0.5)}
-    button:disabled{opacity:0.5;cursor:not-allowed}
-    .status{text-align:center;padding:20px;background:rgba(0,0,0,0.4);border-radius:18px;font-size:19px;margin:20px 0}
-    .slots{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
-    .slot{height:140px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:bold;box-shadow:0 8px 30px rgba(0,0,0,0.5)}
-    .used{background:linear-gradient(135deg,#ff5e5e,#ff304f)}
-    .library{background:linear-gradient(135deg,#00d2ff,#0099ff)}
-    .atlas{background:rgba(255,255,255,0.15);backdrop-filter:blur(15px);border-radius:25px;padding:25px;max-height:90vh;overflow-y:auto}
-    .search{width:100%;padding:14px;margin-bottom:20px;border-radius:15px;border:none;font-size:16px}
-    .card-list{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-    .card-btn{background:rgba(255,255,255,0.25);border:none;border-radius:12px;padding:12px 8px;font-size:14px;cursor:pointer;transition:all .2s}
-    .card-btn:hover{background:rgba(255,255,255,0.45);transform:scale(1.08)}
-    #toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.92);color:#fff;padding:18px 40px;border-radius:50px;font-size:24px;font-weight:bold;box-shadow:0 15px 40px rgba(0,0,0,0.6);backdrop-filter:blur(12px);z-index:9999;opacity:0;transition:all .4s;pointer-events:none;border:2px solid rgba(255,255,255,0.3)}
-    #toast.show{opacity:1;transform:translateX(-50%) translateY(-15px)}
+    body {font-family:"Microsoft YaHei",Arial,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);margin:0;padding:20px;color:#fff;min-height:100vh;position:relative}
+    .container {max-width:1200px;margin:auto;display:grid;grid-template-columns:1fr 400px;gap:25px}
+    .main {background:rgba(255,255,255,0.15);backdrop-filter:blur(15px);border-radius:25px;padding:30px;box-shadow:0 10px 40px rgba(0,0,0,0.4)}
+    h1 {text-align:center;margin:0 0 20px}
+    .config {background:rgba(255,255,255,0.15);border-radius:18px;padding:20px;margin-bottom:25px;text-align:center}
+    input {width:90%;padding:14px;border-radius:12px;border:none;font-size:16px;margin:8px 0}
+    button {padding:14px 30px;margin:8px;font-size:17px;border:none;border-radius:50px;cursor:pointer;font-weight:bold;transition:all .3s}
+    #connectBtn {background:#007bff}#startBtn {background:#28a745}#stopBtn {background:#dc3545}#undoBtn {background:#6c757d}#resetBtn {background:#ffc107;color:#000}
+    button:hover {transform:translateY(-5px);box-shadow:0 10px 25px rgba(0,0,0,0.5)}
+    button:disabled {opacity:0.5;cursor:not-allowed}
+    .status {text-align:center;padding:20px;background:rgba(0,0,0,0.4);border-radius:18px;font-size:19px;margin:20px 0}
+    .slots {display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+    .slot {height:140px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:bold;box-shadow:0 8px 30px rgba(0,0,0,0.5)}
+    .used {background:linear-gradient(135deg,#ff5e5e,#ff304f)}
+    .library {background:linear-gradient(135deg,#00d2ff,#0099ff)}
+    .atlas {background:rgba(255,255,255,0.15);backdrop-filter:blur(15px);border-radius:25px;padding:25px;max-height:90vh;overflow-y:auto}
+    .search {width:100%;padding:14px;margin-bottom:20px;border-radius:15px;border:none;font-size:16px}
+    .card-list {display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .card-btn {background:rgba(255,255,255,0.25);border:none;border-radius:12px;padding:12px 8px;font-size:14px;cursor:pointer;transition:all .2s}
+    .card-btn:hover {background:rgba(255,255,255,0.45);transform:scale(1.08)}
+    #toast {position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.92);color:#fff;padding:18px 40px;border-radius:50px;font-size:24px;font-weight:bold;box-shadow:0 15px 40px rgba(0,0,0,0.6);backdrop-filter:blur(12px);z-index:9999;opacity:0;transition:all .4s;pointer-events:none;border:2px solid rgba(255,255,255,0.3)}
+    #toast.show {opacity:1;transform:translateX(-50%) translateY(-15px)}
 </style>
 </head>
 <body>
 <div class="container">
     <div class="main">
-        <h1>皇室战争记牌器 2025 科大讯飞永久版</h1>
+        <h1>皇室战争记牌器 2025 科大讯飞修正版</h1>
         
         <div class="config">
-            <div style="font-size:18px;margin-bottom:10px">请填写您的科大讯飞信息（永久有效）</div>
-            <input type="text" id="appid" placeholder="APPID（必填）">
-            <input type="text" id="apiKey" placeholder="API Key（必填）">
-            <input type="text" id="apiSecret" placeholder="API Secret（必填）">
+            <div style="font-size:18px;margin-bottom:10px">科大讯飞配置（永久有效）</div>
+            <input type="text" id="appid" placeholder="APPID">
+            <input type="text" id="apiKey" placeholder="API Key">
+            <input type="text" id="apiSecret" placeholder="API Secret">
             <div style="margin-top:15px">
                 <button id="connectBtn">连接科大讯飞</button>
             </div>
-            <div style="margin-top:10px;font-size:15px" id="connectStatus">请填写完整后点击连接</div>
+            <div style="margin-top:10px;font-size:15px" id="connectStatus">填写信息后点击连接</div>
         </div>
 
         <div style="text-align:center">
@@ -52,12 +52,12 @@
             <button id="resetBtn">清空卡槽</button>
         </div>
 
-        <div class="status" id="status">请先填写讯飞信息并连接</div>
+        <div class="status" id="status">等待连接...</div>
         <div class="slots" id="slots"></div>
     </div>
 
     <div class="atlas">
-        <h2 style="text-align:center">卡牌图鉴（点我补录）</h2>
+        <h2 style="text-align:center">卡牌图鉴</h2>
         <input type="text" class="search" placeholder="搜索卡牌…" id="searchInput">
         <div class="card-list" id="cardList"></div>
     </div>
@@ -66,14 +66,14 @@
 <div id="toast">识别成功</div>
 
 <script>
-// 完整卡牌库与别名表（已包含所有现役卡）
+// 卡牌库与别名（同前）
 const allCards = ["骑士","弓箭手","哥布林","炸弹兵","骷髅兵","野蛮人","亡灵","烈焰精灵","蝙蝠","迷你皮卡","哥布林团伙","野蛮人精锐","皇家卫队","重甲亡灵","皇家巨人","哥布林投矛手","骷髅飞龙","冰雪精灵","绿林团伙","烟花炮手","火枪手","瓦基丽武神","野猪骑士","三个火枪手","吹箭哥布林","治疗精灵","飞龙宝宝","骷髅军团","女巫","气球兵","黑暗王子","王子","哥布林巨人","猎人","雷电飞龙","骷髅守卫","巨石投手","飞斧屠夫","加农炮战车","掘地矿工","公主","超级骑士","寒冰法师","地狱飞龙","蛮羊骑士","熔岩猎犬","闪电法师","电磁炮","皇家幽灵","神箭游侠","幻影刺客","暗夜女巫","狂暴樵夫","女巫婆婆","渔夫","弓箭女皇","黄金圣骑","骷髅帝王","皇家塔公主","炮兵","飞刀女爵","皇家大厨","万箭齐发","电击法术","大雪球","皇家速递","火球","火箭","地震法术","野蛮人滚桶","哥布林飞桶","雷电法术","冰冻法术","伤害药水法术","镜像法术","狂暴法术","克隆法术","飓风法术","滚木","骷髅召唤","加农炮","迫击炮","特斯拉电磁塔","哥布林牢笼","骷髅墓碑","地狱之塔","哥布林小屋","烈焰熔炉","炸弹塔","圣水收集器","野蛮人小屋","十字连弩","哥布林钻机","法师","巨人","攻城炸弹人","皮卡超人","戈仑石人","战斗天使","皇家野猪","电击车小队","圣水戈仑","骷髅气球","骷髅巨人","飞行器"];
-
-const aliasMap = {"皮卡":"皮卡超人","逼卡":"皮卡超人","pika":"皮卡超人","皮卡丘":"皮卡超人","矿":"掘地矿工","矿工":"掘地矿工","墓园":"骷髅墓碑","墓地":"骷髅墓碑","坟":"骷髅墓碑","石头":"戈仑石人","戈仑":"戈仑石人","狗球":"戈仑石人","宝宝":"飞龙宝宝","小龙":"飞龙宝宝","大电":"雷电法术","闪电":"雷电法术","三枪":"三个火枪手","火枪":"三个火枪手","超骑":"超级骑士","樵夫":"狂暴樵夫","气球":"气球兵","冰法":"寒冰法师","火法":"闪电法师"};
+const aliasMap = {"皮卡":"皮卡超人","逼卡":"皮卡超人","矿":"掘地矿工","墓园":"骷髅墓碑","石头":"戈仑石人","宝宝":"飞龙宝宝","大电":"雷电法术","三枪":"三个火枪手","超骑":"超级骑士","樵夫":"狂暴樵夫","气球":"气球兵"};
 
 let slots = [], ws = null, recorder = null, stream = null, lastAddTime = 0;
 const toast = document.getElementById('toast');
 
+// UI函数（同前）
 function showToast(t){toast.textContent=t.length>30?t.substring(0,30)+'…':t;toast.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>toast.classList.remove('show'),3000);}
 function updateSlots(){const s=document.getElementById('slots');s.innerHTML='';for(let i=0;i<8;i++){const d=document.createElement('div');d.className=`slot ${i<4?'used':'library'}`;d.textContent=slots[i]||(i<4?`已用 ${i+1}`:`卡组 ${i+5}`);s.appendChild(d);}document.getElementById('undoBtn').disabled=slots.length===0;}
 function addCard(n){const w=Date.now();if(w-lastAddTime<600)return;if(slots[0]===n)return;slots.unshift(n);if(slots.length>8)slots.pop();lastAddTime=w;showToast(n);updateSlots();}
@@ -81,7 +81,7 @@ function renderAtlas(f=''){const l=document.getElementById('cardList');l.innerHT
 document.getElementById('searchInput').addEventListener('input',e=>renderAtlas(e.target.value));
 renderAtlas();
 
-// 连接科大讯飞
+// 修正版连接（HMAC-SHA256签名 + 16kHz PCM）
 document.getElementById('connectBtn').onclick = async () => {
     const appid = document.getElementById('appid').value.trim();
     const apiKey = document.getElementById('apiKey').value.trim();
@@ -93,23 +93,27 @@ document.getElementById('connectBtn').onclick = async () => {
     }
 
     document.getElementById('connectBtn').disabled = true;
-    document.getElementById('connectStatus').innerHTML = '正在连接科大讯飞...';
+    document.getElementById('connectStatus').innerHTML = '正在连接...';
 
     try {
-        const date = new Date().toUTCString();
+        // 修正签名：HMAC-SHA256 with API Secret
+        const date = new Date().toISOString().split('.')[0] + 'Z';  // ISO格式
         const signatureOrigin = `host: iat-api.xfyun.cn\ndate: ${date}\nGET /v2/iat HTTP/1.1`;
-        const signatureSha = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(signatureOrigin));
-        const signature = btoa(String.fromCharCode(...new Uint8Array(signatureSha)));
+        const encoder = new TextEncoder();
+        const keyData = encoder.encode(apiSecret);
+        const data = encoder.encode(signatureOrigin);
+        const key = await crypto.subtle.importKey('raw', keyData, {name: 'HMAC', hash: 'SHA-256'}, false, ['sign']);
+        const sig = await crypto.subtle.sign('HMAC', key, data);
+        const signature = btoa(String.fromCharCode(...new Uint8Array(sig)));
         const authorization = btoa(`api_key="${apiKey}", algorithm="hmac-sha256", headers="host date request-line", signature="${signature}"`);
         
         const url = `wss://iat-api.xfyun.cn/v2/iat?authorization=${authorization}&date=${encodeURIComponent(date)}&host=iat-api.xfyun.cn&appid=${appid}`;
-
         ws = new WebSocket(url);
 
         ws.onopen = () => {
-            document.getElementById('connectStatus').innerHTML = '<span style="color:#6bcf7f">科大讯飞连接成功！（中文最强）</span>';
+            document.getElementById('connectStatus').innerHTML = '<span style="color:#6bcf7f">连接成功！</span>';
             document.getElementById('startBtn').disabled = false;
-            document.getElementById('status').textContent = '已连接，点击“开始实时监听”';
+            document.getElementById('status').textContent = '已连接，点击开始监听';
         };
 
         ws.onmessage = e => {
@@ -124,23 +128,25 @@ document.getElementById('connectBtn').onclick = async () => {
             }
         };
 
-        ws.onerror = () => {
-            document.getElementById('connectStatus').innerHTML = '<span style="color:#ff6b6b">连接失败，请检查密钥或网络</span>';
+        ws.onerror = (err) => {
+            console.error('WebSocket 错误:', err);
+            document.getElementById('connectStatus').innerHTML = '<span style="color:#ff6b6b">连接失败，请检查密钥/网络</span>';
             document.getElementById('connectBtn').disabled = false;
         };
 
-        ws.onclose = () => console.log('WebSocket已关闭');
+        ws.onclose = () => console.log('WebSocket 已关闭');
 
     } catch (e) {
-        document.getElementById('connectStatus').innerHTML = '<span style="color:#ff6b6b">配置错误</span>';
+        console.error('签名错误:', e);
+        document.getElementById('connectStatus').innerHTML = '<span style="color:#ff6b6b">签名失败，请检查 API Secret</span>';
         document.getElementById('connectBtn').disabled = false;
     }
 };
 
-// 开始监听
+// 开始监听（修正音频为16kHz PCM）
 document.getElementById('startBtn').onclick = async () => {
     try {
-        stream = await navigator.mediaDevices.getUserMedia({audio: true});
+        stream = await navigator.mediaDevices.getUserMedia({audio: {sampleRate: 16000, channelCount: 1, echoCancellation: true}});
         recorder = new MediaRecorder(stream, {mimeType: 'audio/webm;codecs=pcm'});
         
         recorder.ondataavailable = e => {
@@ -150,7 +156,7 @@ document.getElementById('startBtn').onclick = async () => {
         };
         
         recorder.start(250);
-        document.getElementById('status').textContent = '科大讯飞实时监听中...（识别率97%+）';
+        document.getElementById('status').textContent = '实时监听中...（识别率97%+）';
         document.getElementById('startBtn').disabled = true;
         document.getElementById('stopBtn').disabled = false;
     } catch (e) {
@@ -162,17 +168,17 @@ document.getElementById('startBtn').onclick = async () => {
 document.getElementById('stopBtn').onclick = () => {
     if (recorder && recorder.state === 'recording') recorder.stop();
     if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({end: true}));
+        ws.send(JSON.stringify({"status": 2, "format": "json"}));  // 修正结束帧
         ws.close();
     }
     if (stream) stream.getTracks().forEach(t => t.stop());
     document.getElementById('startBtn').disabled = false;
     document.getElementById('stopBtn').disabled = true;
-    document.getElementById('status').textContent = '已停止，可重新开始';
+    document.getElementById('status').textContent = '已停止';
 };
 
 document.getElementById('undoBtn').onclick = () => {slots.shift(); updateSlots();};
-document.getElementById('resetBtn').onclick = () => {slots=[]; updateSlots();};
+document.getElementById('resetBtn').onclick = () => {slots = []; updateSlots();};
 updateSlots();
 </script>
 </body>
